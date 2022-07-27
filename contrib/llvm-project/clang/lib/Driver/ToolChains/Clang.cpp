@@ -1493,7 +1493,7 @@ static bool hasMultipleInvocations(const llvm::Triple &Triple,
                                    const ArgList &Args) {
   // Supported only on Darwin where we invoke the compiler multiple times
   // followed by an invocation to lipo.
-  if (!Triple.isOSDarwin())
+  if (!Triple.isOSDarwin() && !Triple.isOSRavynOS())
     return false;
   // If more than one "-arch <arch>" is specified, we're targeting multiple
   // architectures resulting in a fat binary.
@@ -1531,7 +1531,7 @@ static void renderRemarksOptions(const ArgList &Args, ArgStringList &CmdArgs,
     CmdArgs.push_back(A->getValue());
   } else {
     bool hasMultipleArchs =
-        Triple.isOSDarwin() && // Only supported on Darwin platforms.
+        (Triple.isOSDarwin() || Triple.isOSRavynOS()) && // Only supported on Darwin & ravynOS platforms.
         Args.getAllArgValues(options::OPT_arch).size() > 1;
 
     SmallString<128> F;
@@ -1541,7 +1541,7 @@ static void renderRemarksOptions(const ArgList &Args, ArgStringList &CmdArgs,
         F = FinalOutput->getValue();
     } else {
       if (Format != "yaml" && // For YAML, keep the original behavior.
-          Triple.isOSDarwin() && // Enable this only on darwin, since it's the only platform supporting .dSYM bundles.
+          (Triple.isOSDarwin() || Triple.isOSRavynOS()) && // Enable this only on darwin or ravynOS, since they are the only platforms supporting .dSYM bundles.
           Output.isFilename())
         F = Output.getFilename();
     }
@@ -5211,7 +5211,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   // Enable -mconstructor-aliases except on darwin, where we have to work around
   // a linker bug (see <rdar://problem/7651567>), and CUDA device code, where
   // aliases aren't supported.
-  if (!RawTriple.isOSDarwin() && !RawTriple.isNVPTX())
+  if (!RawTriple.isOSDarwin()  && !RawTriple.isOSRavynOS() && !RawTriple.isNVPTX())
     CmdArgs.push_back("-mconstructor-aliases");
 
   // Darwin's kernel doesn't support guard variables; just die if we
@@ -6277,7 +6277,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
 
   if (Args.hasFlag(options::OPT_fregister_global_dtors_with_atexit,
                    options::OPT_fno_register_global_dtors_with_atexit,
-                   RawTriple.isOSDarwin() && !KernelOrKext))
+                   (RawTriple.isOSDarwin() || RawTriple.isOSRavynOS()) && !KernelOrKext))
     CmdArgs.push_back("-fregister-global-dtors-with-atexit");
 
   // -fno-use-line-directives is default.
@@ -6560,7 +6560,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
       MaxTypeAlignStr += A->getValue();
       CmdArgs.push_back(Args.MakeArgString(MaxTypeAlignStr));
     }
-  } else if (RawTriple.isOSDarwin()) {
+  } else if (RawTriple.isOSDarwin() || RawTriple.isOSRavynOS()) {
     if (!SkipMaxTypeAlign) {
       std::string MaxTypeAlignStr = "-fmax-type-align=16";
       CmdArgs.push_back(Args.MakeArgString(MaxTypeAlignStr));
@@ -7293,7 +7293,7 @@ ObjCRuntime Clang::AddObjCRuntimeArgs(const ArgList &args,
     // -fnext-runtime
   } else if (runtimeArg->getOption().matches(options::OPT_fnext_runtime)) {
     // On Darwin, make this use the default behavior for the toolchain.
-    if (getToolChain().getTriple().isOSDarwin()) {
+    if (getToolChain().getTriple().isOSDarwin() || getToolChain().getTriple().isOSRavynOS()) {
       runtime = getToolChain().getDefaultObjCRuntime(isNonFragile);
 
       // Otherwise, build for a generic macosx port.

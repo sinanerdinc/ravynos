@@ -9,6 +9,7 @@
 #include "MSVC.h"
 #include "CommonArgs.h"
 #include "Darwin.h"
+#include "RavynOS.h"
 #include "clang/Basic/CharInfo.h"
 #include "clang/Basic/Version.h"
 #include "clang/Config/config.h"

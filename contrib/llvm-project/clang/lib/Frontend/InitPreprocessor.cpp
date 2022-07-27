@@ -1169,7 +1169,7 @@ static void InitializePredefinedMacros(const TargetInfo &TI,
 
   // On Darwin, there are __double_underscored variants of the type
   // nullability qualifiers.
-  if (TI.getTriple().isOSDarwin()) {
+  if (TI.getTriple().isOSDarwin() || TI.getTriple().isOSRavynOS()) {
     Builder.defineMacro("__nonnull", "_Nonnull");
     Builder.defineMacro("__null_unspecified", "_Null_unspecified");
     Builder.defineMacro("__nullable", "_Nullable");

@@ -19,6 +19,72 @@ using namespace clang::targets;
 namespace clang {
 namespace targets {
 
+void getRavynOSDefines(MacroBuilder &Builder, const LangOptions &Opts,
+                      const llvm::Triple &Triple, StringRef &PlatformName,
+                      VersionTuple &PlatformMinVersion) {
+  Builder.defineMacro("__APPLE_CC__", "6000");
+  Builder.defineMacro("__APPLE__");
+  Builder.defineMacro("__STDC_NO_THREADS__");
+  Builder.defineMacro("__RAVYNOS__");
+
+  // AddressSanitizer doesn't play well with source fortification, which is on
+  // by default on RavynOS.
+  if (Opts.Sanitize.has(SanitizerKind::Address))
+    Builder.defineMacro("_FORTIFY_SOURCE", "0");
+
+  // RavynOS defines __weak, __strong, and __unsafe_unretained even in C mode.
+  if (!Opts.ObjC) {
+    // __weak is always defined, for use in blocks and with objc pointers.
+    Builder.defineMacro("__weak", "__attribute__((objc_gc(weak)))");
+    Builder.defineMacro("__strong", "");
+    Builder.defineMacro("__unsafe_unretained", "");
+  }
+
+  if (Opts.Static)
+    Builder.defineMacro("__STATIC__");
+  else
+    Builder.defineMacro("__DYNAMIC__");
+
+  if (Opts.POSIXThreads)
+    Builder.defineMacro("_REENTRANT");
+
+  // Get the platform type and version number from the triple.
+  VersionTuple OsVersion;
+  Triple.getRavynOSVersion(OsVersion);
+  PlatformName = "ravynos";
+
+  // Set the appropriate OS version define.
+  // Note that the Driver allows versions which aren't representable in the
+  // define (because we only get a single digit for the minor and micro
+  // revision numbers). So, we limit them to the maximum representable
+  // version.
+  assert(OsVersion < VersionTuple(100) && "Invalid version!");
+  char Str[7];
+  if (OsVersion < VersionTuple(10, 10)) {
+    Str[0] = '0' + (OsVersion.getMajor() / 10);
+    Str[1] = '0' + (OsVersion.getMajor() % 10);
+    Str[2] = '0' + std::min(OsVersion.getMinor().getValueOr(0), 9U);
+    Str[3] = '0' + std::min(OsVersion.getSubminor().getValueOr(0), 9U);
+    Str[4] = '\0';
+  } else {
+    // Handle versions > 10.9.
+    Str[0] = '0' + (OsVersion.getMajor() / 10);
+    Str[1] = '0' + (OsVersion.getMajor() % 10);
+    Str[2] = '0' + (OsVersion.getMinor().getValueOr(0) / 10);
+    Str[3] = '0' + (OsVersion.getMinor().getValueOr(0) % 10);
+    Str[4] = '0' + (OsVersion.getSubminor().getValueOr(0) / 10);
+    Str[5] = '0' + (OsVersion.getSubminor().getValueOr(0) % 10);
+    Str[6] = '\0';
+  }
+  Builder.defineMacro("__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__", Str);
+
+  // Tell users about the kernel if there is one.
+  if (Triple.isOSRavynOS())
+    Builder.defineMacro("__MACH__");
+
+  PlatformMinVersion = OsVersion;
+}
+
 void getDarwinDefines(MacroBuilder &Builder, const LangOptions &Opts,
                       const llvm::Triple &Triple, StringRef &PlatformName,
                       VersionTuple &PlatformMinVersion) {

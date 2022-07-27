@@ -42,6 +42,7 @@
 #include "ToolChains/PPCFreeBSD.h"
 #include "ToolChains/PPCLinux.h"
 #include "ToolChains/PS4CPU.h"
+#include "Toolchains/RavynOS.h"
 #include "ToolChains/RISCVToolchain.h"
 #include "ToolChains/SPIRV.h"
 #include "ToolChains/Solaris.h"
@@ -506,17 +507,24 @@ static llvm::Triple computeTargetTriple(const Driver &D,
     Target.setOSName("hurd");
 
   // Handle Apple-specific options available here.
+  // These also work for ravynOS
   if (Target.isOSBinFormatMachO()) {
     // If an explicit Darwin arch name is given, that trumps all.
     if (!DarwinArchName.empty()) {
-      tools::darwin::setTripleTypeForMachOArchName(Target, DarwinArchName);
+      if(TargetTriple.contains("-ravynsoft"))
+        tools::ravynOS::setTripleTypeForMachOArchName(Target, DarwinArchName);
+      else
+        tools::darwin::setTripleTypeForMachOArchName(Target, DarwinArchName);
       return Target;
     }
 
     // Handle the Darwin '-arch' flag.
     if (Arg *A = Args.getLastArg(options::OPT_arch)) {
       StringRef ArchName = A->getValue();
-      tools::darwin::setTripleTypeForMachOArchName(Target, ArchName);
+      if(TargetTriple.contains("-ravynsoft"))
+        tools::ravynOS::setTripleTypeForMachOArchName(Target, ArchName);
+      else
+        tools::darwin::setTripleTypeForMachOArchName(Target, ArchName);
     }
   }
 
@@ -5520,6 +5528,9 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
     case llvm::Triple::TvOS:
     case llvm::Triple::WatchOS:
       TC = std::make_unique<toolchains::DarwinClang>(*this, Target, Args);
+      break;
+    case llvm::Triple::RavynOS:
+      TC = std::make_unique<toolchains::RavynOSClang>(*this, Target, Args);
       break;
     case llvm::Triple::DragonFly:
       TC = std::make_unique<toolchains::DragonFly>(*this, Target, Args);

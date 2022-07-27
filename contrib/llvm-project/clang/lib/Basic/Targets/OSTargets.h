@@ -70,6 +70,72 @@ public:
       : OSTargetInfo<Target>(Triple, Opts) {}
 };
 
+void getRavynOSDefines(MacroBuilder &Builder, const LangOptions &Opts,
+                      const llvm::Triple &Triple, StringRef &PlatformName,
+                      VersionTuple &PlatformMinVersion);
+
+template <typename Target>
+class LLVM_LIBRARY_VISIBILITY RavynOSTargetInfo : public OSTargetInfo<Target> {
+protected:
+  void getOSDefines(const LangOptions &Opts, const llvm::Triple &Triple,
+                    MacroBuilder &Builder) const override {
+    getRavynOSDefines(Builder, Opts, Triple, this->PlatformName,
+                     this->PlatformMinVersion);
+  }
+
+public:
+  RavynOSTargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
+      : OSTargetInfo<Target>(Triple, Opts) {
+    // By default, no TLS, and we list permitted architecture/OS
+    // combinations.
+    this->TLSSupported = false;
+
+    this->TLSSupported = !Triple.isRavynOSVersionLT(1, 0);
+    this->MCountName = "\01mcount";
+  }
+
+  const char *getStaticInitSectionSpecifier() const override {
+    // FIXME: We should return 0 when building kexts.
+    return "__TEXT,__StaticInit,regular,pure_instructions";
+  }
+
+  /// RavynOS does not support protected visibility.  RavynOS's "default"
+  /// is very similar to ELF's "protected";  RavynOS requires a "weak"
+  /// attribute on declarations that can be dynamically replaced.
+  bool hasProtectedVisibility() const override { return false; }
+
+  unsigned getExnObjectAlignment() const override {
+    // Older versions of libc++abi guarantee an alignment of only 8-bytes for
+    // exception objects because of a bug in __cxa_exception that was
+    // eventually fixed in r319123.
+    llvm::VersionTuple MinVersion;
+    const llvm::Triple &T = this->getTriple();
+
+    // Compute the earliest OS versions that have the fix to libc++abi.
+    switch (T.getOS()) {
+    case llvm::Triple::RavynOS:
+      MinVersion = llvm::VersionTuple(1U, 0U);
+      break;
+    default:
+      // Conservatively return 8 bytes if OS is unknown.
+      return 64;
+    }
+
+    if (T.getOSVersion() < MinVersion)
+      return 64;
+    return OSTargetInfo<Target>::getExnObjectAlignment();
+  }
+
+  TargetInfo::IntType getLeastIntTypeByWidth(unsigned BitWidth,
+                                             bool IsSigned) const final {
+    // RavynOS uses `long long` for `int_least64_t` and `int_fast64_t`.
+    return BitWidth == 64
+               ? (IsSigned ? TargetInfo::SignedLongLong
+                           : TargetInfo::UnsignedLongLong)
+               : TargetInfo::getLeastIntTypeByWidth(BitWidth, IsSigned);
+  }
+};
+
 void getDarwinDefines(MacroBuilder &Builder, const LangOptions &Opts,
                       const llvm::Triple &Triple, StringRef &PlatformName,
                       VersionTuple &PlatformMinVersion);
@@ -219,8 +285,6 @@ protected:
     Builder.defineMacro("__KPRINTF_ATTRIBUTE__");
     DefineStd(Builder, "unix", Opts);
     Builder.defineMacro("__ELF__");
-    Builder.defineMacro("__MACH__");
-    Builder.defineMacro("__RAVYNOS__");
 
     // On FreeBSD, wchar_t contains the number of the code point as
     // used by the character set of the locale. These character sets are

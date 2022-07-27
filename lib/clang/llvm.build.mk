@@ -43,9 +43,9 @@ TARGET_ABI=	-gnueabi
 .else
 TARGET_ABI=
 .endif
-VENDOR=		ravynos
+VENDOR=		ravynsoft
 
-LLVM_TARGET_TRIPLE?=	${TARGET_ARCH:C/amd64/x86_64/:C/[hs]f$//:S/mipsn32/mips64/}-${VENDOR}-freebsd${OS_REVISION}${TARGET_ABI}
+LLVM_TARGET_TRIPLE?=	${TARGET_ARCH:C/amd64/x86_64/:C/[hs]f$//:S/mipsn32/mips64/}-${VENDOR}-ravynOS${TARGET_ABI}
 LLVM_BUILD_TRIPLE?=	${BUILD_ARCH:C/amd64/x86_64/:C/[hs]f$//:S/mipsn32/mips64/}-${VENDOR}-freebsd${OS_REVISION}
 
 CFLAGS+=	-DLLVM_DEFAULT_TARGET_TRIPLE=\"${LLVM_TARGET_TRIPLE}\"

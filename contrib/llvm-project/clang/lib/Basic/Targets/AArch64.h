@@ -218,6 +218,18 @@ private:
   void setDataLayout() override;
 };
 
+class LLVM_LIBRARY_VISIBILITY RavynOSAArch64TargetInfo
+    : public RavynOSTargetInfo<AArch64leTargetInfo> {
+public:
+  RavynOSAArch64TargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts);
+
+  BuiltinVaListKind getBuiltinVaListKind() const override;
+
+ protected:
+  void getOSDefines(const LangOptions &Opts, const llvm::Triple &Triple,
+                    MacroBuilder &Builder) const override;
+};
+
 class LLVM_LIBRARY_VISIBILITY DarwinAArch64TargetInfo
     : public DarwinTargetInfo<AArch64leTargetInfo> {
 public:

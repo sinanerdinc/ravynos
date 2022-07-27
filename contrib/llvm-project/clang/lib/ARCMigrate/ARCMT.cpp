@@ -165,6 +165,9 @@ static bool HasARCRuntime(CompilerInvocation &origCI) {
     return triple.getOSVersion() >= VersionTuple(10, 7);
   }
 
+  if (triple.getOS() == llvm::Triple::RavynOS)
+    return true;
+
   return false;
 }
 

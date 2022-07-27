@@ -329,6 +329,9 @@ arm::FloatABI arm::getDefaultFloatABI(const llvm::Triple &Triple) {
   case llvm::Triple::WatchOS:
     return FloatABI::Hard;
 
+  case llvm::Triple::RavynOS:
+    return (SubArch == 6 || SubArch == 7) ? FloatABI::SoftFP : FloatABI::Soft;
+
   // FIXME: this is invalid for WindowsCE
   case llvm::Triple::Win32:
     // It is incorrect to select hard float ABI on MachO platforms if the ABI is

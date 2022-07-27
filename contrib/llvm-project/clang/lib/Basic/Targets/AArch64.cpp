@@ -68,7 +68,7 @@ AArch64TargetInfo::AArch64TargetInfo(const llvm::Triple &Triple,
     Int64Type = SignedLongLong;
     IntMaxType = SignedLongLong;
   } else {
-    if (!getTriple().isOSDarwin() && !getTriple().isOSNetBSD())
+    if (!getTriple().isOSDarwin() && !getTriple().isOSNetBSD() && !getTriple().isOSRavynOS())
       WCharType = UnsignedInt;
 
     Int64Type = SignedLong;
@@ -998,6 +998,50 @@ MinGWARM64TargetInfo::MinGWARM64TargetInfo(const llvm::Triple &Triple,
                                            const TargetOptions &Opts)
     : WindowsARM64TargetInfo(Triple, Opts) {
   TheCXXABI.set(TargetCXXABI::GenericAArch64);
+}
+
+RavynOSAArch64TargetInfo::RavynOSAArch64TargetInfo(const llvm::Triple &Triple,
+                                                 const TargetOptions &Opts)
+    : RavynOSTargetInfo<AArch64leTargetInfo>(Triple, Opts) {
+  Int64Type = SignedLongLong;
+  if (getTriple().isArch32Bit())
+    IntMaxType = SignedLongLong;
+
+  WCharType = SignedInt;
+  UseSignedCharForObjCBool = false;
+
+  LongDoubleWidth = LongDoubleAlign = SuitableAlign = 64;
+  LongDoubleFormat = &llvm::APFloat::IEEEdouble();
+
+  UseZeroLengthBitfieldAlignment = false;
+
+  if (getTriple().isArch32Bit()) {
+    UseBitFieldTypeAlignment = false;
+    ZeroLengthBitfieldBoundary = 32;
+    UseZeroLengthBitfieldAlignment = true;
+    TheCXXABI.set(TargetCXXABI::WatchOS);
+  } else
+    TheCXXABI.set(TargetCXXABI::AppleARM64);
+}
+
+void RavynOSAArch64TargetInfo::getOSDefines(const LangOptions &Opts,
+                                           const llvm::Triple &Triple,
+                                           MacroBuilder &Builder) const {
+  Builder.defineMacro("__AARCH64_SIMD__");
+  if (Triple.isArch32Bit())
+    Builder.defineMacro("__ARM64_ARCH_8_32__");
+  else
+    Builder.defineMacro("__ARM64_ARCH_8__");
+  Builder.defineMacro("__ARM_NEON__");
+  Builder.defineMacro("__LITTLE_ENDIAN__");
+  Builder.defineMacro("__REGISTER_PREFIX__", "");
+  Builder.defineMacro("__arm64", "1");
+  Builder.defineMacro("__arm64__", "1");
+
+  if (Triple.isArm64e())
+    Builder.defineMacro("__arm64e__", "1");
+
+  getRavynOSDefines(Builder, Opts, Triple, PlatformName, PlatformMinVersion);
 }
 
 DarwinAArch64TargetInfo::DarwinAArch64TargetInfo(const llvm::Triple &Triple,

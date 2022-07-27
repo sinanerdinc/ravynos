@@ -874,6 +874,32 @@ public:
   }
 };
 
+class LLVM_LIBRARY_VISIBILITY RavynOSX86_64TargetInfo
+    : public RavynOSTargetInfo<X86_64TargetInfo> {
+public:
+  RavynOSX86_64TargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
+      : RavynOSTargetInfo<X86_64TargetInfo>(Triple, Opts) {
+    Int64Type = SignedLongLong;
+    // The 64-bit iOS simulator uses the builtin bool type for Objective-C.
+    llvm::Triple T = llvm::Triple(Triple);
+    if (T.isiOS())
+      UseSignedCharForObjCBool = false;
+    resetDataLayout("e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:"
+                    "16:32:64-S128", "_");
+  }
+
+  bool handleTargetFeatures(std::vector<std::string> &Features,
+                            DiagnosticsEngine &Diags) override {
+    if (!RavynOSTargetInfo<X86_64TargetInfo>::handleTargetFeatures(Features,
+                                                                  Diags))
+      return false;
+    // We now know the features we have: we can decide how to align vectors.
+    MaxVectorAlign =
+        hasFeature("avx512f") ? 512 : hasFeature("avx") ? 256 : 128;
+    return true;
+  }
+};
+
 class LLVM_LIBRARY_VISIBILITY DarwinX86_64TargetInfo
     : public DarwinTargetInfo<X86_64TargetInfo> {
 public:
