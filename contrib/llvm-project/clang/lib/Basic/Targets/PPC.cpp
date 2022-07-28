@@ -326,7 +326,8 @@ void PPCTargetInfo::getTargetDefines(const LangOptions &Opts,
 
   // Define this for elfv2 (64-bit only) or 64-bit darwin.
   if (ABI == "elfv2" ||
-      (getTriple().getOS() == llvm::Triple::Darwin && PointerWidth == 64))
+      ((getTriple().getOS() == llvm::Triple::RavynOS || 
+      getTriple().getOS() == llvm::Triple::Darwin) && PointerWidth == 64))
     Builder.defineMacro("__STRUCT_PARM_ALIGN__", "16");
 
   if (ArchDefs & ArchDefineName)

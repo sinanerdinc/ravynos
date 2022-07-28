@@ -94,7 +94,7 @@ public:
     case iOS:
     case WatchOS:
     case AppleARM64:
-      return T.isOSDarwin();
+      return T.isOSDarwin() || T.isOSRavynOS();
 
     case Fuchsia:
       return T.isOSFuchsia();

@@ -3888,6 +3888,8 @@ CodeGenFunction::EmitBlockCopyAndAutorelease(llvm::Value *Block, QualType Ty) {
 
 static unsigned getBaseMachOPlatformID(const llvm::Triple &TT) {
   switch (TT.getOS()) {
+  case llvm::Triple::RavynOS:
+    return llvm::MachO::PLATFORM_RAVYNOS;
   case llvm::Triple::Darwin:
   case llvm::Triple::MacOSX:
     return llvm::MachO::PLATFORM_MACOS;

@@ -88,9 +88,7 @@ public:
       : OSTargetInfo<Target>(Triple, Opts) {
     // By default, no TLS, and we list permitted architecture/OS
     // combinations.
-    this->TLSSupported = false;
-
-    this->TLSSupported = !Triple.isRavynOSVersionLT(1, 0);
+    this->TLSSupported = true;
     this->MCountName = "\01mcount";
   }
 

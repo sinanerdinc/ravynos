@@ -2528,7 +2528,7 @@ static void emitGlobalDtorWithCXAAtExit(CodeGenFunction &CGF,
   const char *Name = "__cxa_atexit";
   if (TLS) {
     const llvm::Triple &T = CGF.getTarget().getTriple();
-    Name = T.isOSDarwin() ?  "_tlv_atexit" : "__cxa_thread_atexit";
+    Name = (T.isOSDarwin() || T.isOSRavynOS()) ?  "_tlv_atexit" : "__cxa_thread_atexit";
   }
 
   // We're assuming that the destructor function is something we can
@@ -2830,7 +2830,7 @@ void ItaniumCXXABI::EmitThreadLocalInitFuncs(
     CodeGenFunction(CGM).GenerateCXXGlobalInitFunc(
         InitFunc, OrderedInits, ConstantAddress(Guard, CGM.Int8Ty, GuardAlign));
     // On Darwin platforms, use CXX_FAST_TLS calling convention.
-    if (CGM.getTarget().getTriple().isOSDarwin()) {
+    if (CGM.getTarget().getTriple().isOSDarwin() || CGM.getTarget().getTriple().isOSRavynOS()) {
       InitFunc->setCallingConv(llvm::CallingConv::CXX_FAST_TLS);
       InitFunc->addFnAttr(llvm::Attribute::NoUnwind);
     }

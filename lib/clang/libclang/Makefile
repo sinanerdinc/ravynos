@@ -353,6 +353,7 @@ SRCS_MIN+=	Driver/ToolChains/OpenBSD.cpp
 SRCS_MIN+=	Driver/ToolChains/PPCFreeBSD.cpp
 SRCS_MIN+=	Driver/ToolChains/PPCLinux.cpp
 SRCS_MIN+=	Driver/ToolChains/PS4CPU.cpp
+SRCS_MIN+=	Driver/ToolChains/RavynOS.cpp
 SRCS_MIN+=	Driver/ToolChains/RISCVToolchain.cpp
 SRCS_MIN+=	Driver/ToolChains/SPIRV.cpp
 SRCS_MIN+=	Driver/ToolChains/Solaris.cpp

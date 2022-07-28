@@ -11,7 +11,8 @@
 
 #include "Cuda.h"
 #include "ROCm.h"
-#include "clang/Basic/RavynOSSDKInfo.h"
+#include "Darwin.h" // for MachO class
+#include "clang/Basic/DarwinSDKInfo.h"
 #include "clang/Basic/LangOptions.h"
 #include "clang/Driver/Tool.h"
 #include "clang/Driver/ToolChain.h"
@@ -20,13 +21,9 @@
 namespace clang {
 namespace driver {
 
-namespace toolchains {
-class MachO;
-} // end namespace toolchains
-
 namespace tools {
 
-namespace ravynOS {
+namespace ravynos {
 llvm::Triple::ArchType getArchTypeForMachOArchName(StringRef Str);
 void setTripleTypeForMachOArchName(llvm::Triple &T, StringRef Str);
 
@@ -49,7 +46,7 @@ public:
 class LLVM_LIBRARY_VISIBILITY Assembler : public MachOTool {
 public:
   Assembler(const ToolChain &TC)
-      : MachOTool("ravynOS::Assembler", "assembler", TC) {}
+      : MachOTool("ravynos::Assembler", "assembler", TC) {}
 
   bool hasIntegratedCPP() const override { return false; }
 
@@ -67,7 +64,7 @@ class LLVM_LIBRARY_VISIBILITY Linker : public MachOTool {
                    bool LinkerIsLLD) const;
 
 public:
-  Linker(const ToolChain &TC) : MachOTool("ravynOS::Linker", "linker", TC) {}
+  Linker(const ToolChain &TC) : MachOTool("ravynos::Linker", "linker", TC) {}
 
   bool hasIntegratedCPP() const override { return false; }
   bool isLinkJob() const override { return true; }
@@ -81,7 +78,7 @@ public:
 class LLVM_LIBRARY_VISIBILITY StaticLibTool : public MachOTool {
 public:
   StaticLibTool(const ToolChain &TC)
-      : MachOTool("ravynOS::StaticLibTool", "static-lib-linker", TC) {}
+      : MachOTool("ravynos::StaticLibTool", "static-lib-linker", TC) {}
 
   bool hasIntegratedCPP() const override { return false; }
   bool isLinkJob() const override { return true; }
@@ -94,7 +91,7 @@ public:
 
 class LLVM_LIBRARY_VISIBILITY Lipo : public MachOTool {
 public:
-  Lipo(const ToolChain &TC) : MachOTool("ravynOS::Lipo", "lipo", TC) {}
+  Lipo(const ToolChain &TC) : MachOTool("ravynos::Lipo", "lipo", TC) {}
 
   bool hasIntegratedCPP() const override { return false; }
 
@@ -107,7 +104,7 @@ public:
 class LLVM_LIBRARY_VISIBILITY Dsymutil : public MachOTool {
 public:
   Dsymutil(const ToolChain &TC)
-      : MachOTool("ravynOS::Dsymutil", "dsymutil", TC) {}
+      : MachOTool("ravynos::Dsymutil", "dsymutil", TC) {}
 
   bool hasIntegratedCPP() const override { return false; }
   bool isDsymutilJob() const override { return true; }
@@ -121,7 +118,7 @@ public:
 class LLVM_LIBRARY_VISIBILITY VerifyDebug : public MachOTool {
 public:
   VerifyDebug(const ToolChain &TC)
-      : MachOTool("ravynOS::VerifyDebug", "dwarfdump", TC) {}
+      : MachOTool("ravynos::VerifyDebug", "dwarfdump", TC) {}
 
   bool hasIntegratedCPP() const override { return false; }
 
@@ -130,151 +127,10 @@ public:
                     const llvm::opt::ArgList &TCArgs,
                     const char *LinkingOutput) const override;
 };
-} // end namespace ravynOS
+} // end namespace ravynos
 } // end namespace tools
 
 namespace toolchains {
-
-class LLVM_LIBRARY_VISIBILITY MachO : public ToolChain {
-protected:
-  Tool *buildAssembler() const override;
-  Tool *buildLinker() const override;
-  Tool *buildStaticLibTool() const override;
-  Tool *getTool(Action::ActionClass AC) const override;
-
-private:
-  mutable std::unique_ptr<tools::ravynOS::Lipo> Lipo;
-  mutable std::unique_ptr<tools::ravynOS::Dsymutil> Dsymutil;
-  mutable std::unique_ptr<tools::ravynOS::VerifyDebug> VerifyDebug;
-
-public:
-  MachO(const Driver &D, const llvm::Triple &Triple,
-        const llvm::opt::ArgList &Args);
-  ~MachO() override;
-
-  /// @name MachO specific toolchain API
-  /// {
-
-  /// Get the "MachO" arch name for a particular compiler invocation. For
-  /// example, Apple treats different ARM variations as distinct architectures.
-  StringRef getMachOArchName(const llvm::opt::ArgList &Args) const;
-
-  /// Add the linker arguments to link the ARC runtime library.
-  virtual void AddLinkARCArgs(const llvm::opt::ArgList &Args,
-                              llvm::opt::ArgStringList &CmdArgs) const {}
-
-  /// Add the linker arguments to link the compiler runtime library.
-  ///
-  /// FIXME: This API is intended for use with embedded libraries only, and is
-  /// misleadingly named.
-  virtual void AddLinkRuntimeLibArgs(const llvm::opt::ArgList &Args,
-                                     llvm::opt::ArgStringList &CmdArgs,
-                                     bool ForceLinkBuiltinRT = false) const;
-
-  virtual void addStartObjectFileArgs(const llvm::opt::ArgList &Args,
-                                      llvm::opt::ArgStringList &CmdArgs) const {
-  }
-
-  virtual void addMinVersionArgs(const llvm::opt::ArgList &Args,
-                                 llvm::opt::ArgStringList &CmdArgs) const {}
-
-  virtual void addPlatformVersionArgs(const llvm::opt::ArgList &Args,
-                                      llvm::opt::ArgStringList &CmdArgs) const {
-  }
-
-  /// On some iOS platforms, kernel and kernel modules were built statically. Is
-  /// this such a target?
-  virtual bool isKernelStatic() const { return false; }
-
-  /// Is the target either iOS or an iOS simulator?
-  bool isTargetIOSBased() const { return false; }
-
-  /// Options to control how a runtime library is linked.
-  enum RuntimeLinkOptions : unsigned {
-    /// Link the library in even if it can't be found in the VFS.
-    RLO_AlwaysLink = 1 << 0,
-
-    /// Use the embedded runtime from the macho_embedded directory.
-    RLO_IsEmbedded = 1 << 1,
-
-    /// Emit rpaths for @executable_path as well as the resource directory.
-    RLO_AddRPath = 1 << 2,
-  };
-
-  /// Add a runtime library to the list of items to link.
-  void AddLinkRuntimeLib(const llvm::opt::ArgList &Args,
-                         llvm::opt::ArgStringList &CmdArgs, StringRef Component,
-                         RuntimeLinkOptions Opts = RuntimeLinkOptions(),
-                         bool IsShared = false) const;
-
-  /// Add any profiling runtime libraries that are needed. This is essentially a
-  /// MachO specific version of addProfileRT in Tools.cpp.
-  void addProfileRTLibs(const llvm::opt::ArgList &Args,
-                        llvm::opt::ArgStringList &CmdArgs) const override {
-    // There aren't any profiling libs for embedded targets currently.
-  }
-
-  /// }
-  /// @name ToolChain Implementation
-  /// {
-
-  types::ID LookupTypeForExtension(StringRef Ext) const override;
-
-  bool HasNativeLLVMSupport() const override;
-
-  llvm::opt::DerivedArgList *
-  TranslateArgs(const llvm::opt::DerivedArgList &Args, StringRef BoundArch,
-                Action::OffloadKind DeviceOffloadKind) const override;
-
-  bool IsBlocksDefault() const override {
-    // Always allow blocks on Apple; users interested in versioning are
-    // expected to use /usr/include/Block.h.
-    return true;
-  }
-  bool IsIntegratedAssemblerDefault() const override {
-    // Default integrated assembler to on for Apple's MachO targets.
-    return true;
-  }
-
-  bool IsMathErrnoDefault() const override { return false; }
-
-  bool IsEncodeExtendedBlockSignatureDefault() const override { return true; }
-
-  bool IsObjCNonFragileABIDefault() const override {
-    // Non-fragile ABI is default for everything but i386.
-    return getTriple().getArch() != llvm::Triple::x86;
-  }
-
-  bool UseObjCMixedDispatch() const override { return true; }
-
-  bool IsUnwindTablesDefault(const llvm::opt::ArgList &Args) const override;
-
-  RuntimeLibType GetDefaultRuntimeLibType() const override {
-    return ToolChain::RLT_CompilerRT;
-  }
-
-  bool isPICDefault() const override;
-  bool isPIEDefault(const llvm::opt::ArgList &Args) const override;
-  bool isPICDefaultForced() const override;
-
-  bool SupportsProfiling() const override;
-
-  bool UseDwarfDebugFlags() const override;
-
-  llvm::ExceptionHandling
-  GetExceptionModel(const llvm::opt::ArgList &Args) const override {
-    return llvm::ExceptionHandling::None;
-  }
-
-  virtual StringRef getOSLibraryNameSuffix(bool IgnoreSim = false) const {
-    return "";
-  }
-
-  // RavynOS toolchain uses legacy thin LTO API, which is not
-  // capable of unit splitting.
-  bool canSplitThinLTOUnit() const override { return false; }
-  /// }
-};
 
 /// RavynOS - The base RavynOS tool chain.
 class LLVM_LIBRARY_VISIBILITY RavynOS : public MachO {
@@ -287,8 +143,8 @@ public:
   mutable bool TargetInitialized;
 
   enum RavynOSPlatformKind {
-    RavynOSOS,
-    LastRavynOSPlatform = RavynOS
+    ravynOS,
+    LastRavynOSPlatform = ravynOS
   };
   enum RavynOSEnvironmentKind {
     NativeEnvironment,
@@ -303,7 +159,7 @@ public:
   mutable VersionTuple OSTargetVersion;
 
   /// The information about the ravynOS SDK that was used.
-  mutable Optional<RavynOSSDKInfo> SDKInfo;
+  mutable Optional<DarwinSDKInfo> SDKInfo;
 
   CudaInstallationDetector CudaInstallation;
   RocmInstallationDetector RocmInstallation;
@@ -332,8 +188,7 @@ public:
                               llvm::opt::ArgStringList &CmdArgs) const override;
 
   bool isKernelStatic() const override {
-    return (!(isTargetIPhoneOS() && !isIPhoneOSVersionLT(6, 0)) &&
-            !isTargetWatchOS());
+    return true;
   }
 
   void addProfileRTLibs(const llvm::opt::ArgList &Args,

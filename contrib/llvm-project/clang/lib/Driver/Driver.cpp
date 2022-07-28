@@ -42,7 +42,7 @@
 #include "ToolChains/PPCFreeBSD.h"
 #include "ToolChains/PPCLinux.h"
 #include "ToolChains/PS4CPU.h"
-#include "Toolchains/RavynOS.h"
+#include "ToolChains/RavynOS.h"
 #include "ToolChains/RISCVToolchain.h"
 #include "ToolChains/SPIRV.h"
 #include "ToolChains/Solaris.h"
@@ -512,7 +512,7 @@ static llvm::Triple computeTargetTriple(const Driver &D,
     // If an explicit Darwin arch name is given, that trumps all.
     if (!DarwinArchName.empty()) {
       if(TargetTriple.contains("-ravynsoft"))
-        tools::ravynOS::setTripleTypeForMachOArchName(Target, DarwinArchName);
+        tools::ravynos::setTripleTypeForMachOArchName(Target, DarwinArchName);
       else
         tools::darwin::setTripleTypeForMachOArchName(Target, DarwinArchName);
       return Target;
@@ -522,7 +522,7 @@ static llvm::Triple computeTargetTriple(const Driver &D,
     if (Arg *A = Args.getLastArg(options::OPT_arch)) {
       StringRef ArchName = A->getValue();
       if(TargetTriple.contains("-ravynsoft"))
-        tools::ravynOS::setTripleTypeForMachOArchName(Target, ArchName);
+        tools::ravynos::setTripleTypeForMachOArchName(Target, ArchName);
       else
         tools::darwin::setTripleTypeForMachOArchName(Target, ArchName);
     }

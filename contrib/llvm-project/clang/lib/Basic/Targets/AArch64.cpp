@@ -1089,6 +1089,11 @@ void DarwinAArch64TargetInfo::getOSDefines(const LangOptions &Opts,
 }
 
 TargetInfo::BuiltinVaListKind
+RavynOSAArch64TargetInfo::getBuiltinVaListKind() const {
+  return TargetInfo::CharPtrBuiltinVaList;
+}
+
+TargetInfo::BuiltinVaListKind
 DarwinAArch64TargetInfo::getBuiltinVaListKind() const {
   return TargetInfo::CharPtrBuiltinVaList;
 }

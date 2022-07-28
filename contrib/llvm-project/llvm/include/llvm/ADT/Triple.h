@@ -99,6 +99,7 @@ public:
     lanai,          // Lanai: Lanai 32-bit
     wasm32,         // WebAssembly with 32-bit pointers
     wasm64,         // WebAssembly with 64-bit pointers
+    ravynos,        // RavynSoft RavynOS
     renderscript32, // 32-bit RenderScript
     renderscript64, // 64-bit RenderScript
     ve,             // NEC SX-Aurora Vector Engine
@@ -164,6 +165,7 @@ public:
     AMD,
     Mesa,
     SUSE,
+    Ravynsoft,
     OpenEmbedded,
     LastVendorType = OpenEmbedded
   };
@@ -204,6 +206,7 @@ public:
     HermitCore, // HermitCore Unikernel/Multikernel
     Hurd,       // GNU/Hurd
     WASI,       // Experimental WebAssembly OS
+    RavynOS,
     Emscripten,
     LastOSType = Emscripten
   };
@@ -352,6 +355,8 @@ public:
   /// constant 10.4.0 in that case.  Returns true if successful.
   bool getMacOSXVersion(VersionTuple &Version) const;
 
+  bool getRavynOSVersion(VersionTuple &Version) const;
+
   /// Parse the version number as with getOSVersion.  This should only be called
   /// with IOS or generic triples.
   VersionTuple getiOSVersion() const;
@@ -467,6 +472,10 @@ public:
   /// Is this a "Darwin" OS (macOS, iOS, tvOS or watchOS).
   bool isOSDarwin() const {
     return isMacOSX() || isiOS() || isWatchOS();
+  }
+
+  bool isOSRavynOS() const {
+    return getOS() == Triple::RavynOS;
   }
 
   bool isSimulatorEnvironment() const {

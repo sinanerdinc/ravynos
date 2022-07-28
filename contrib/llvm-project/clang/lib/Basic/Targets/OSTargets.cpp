@@ -76,7 +76,7 @@ void getRavynOSDefines(MacroBuilder &Builder, const LangOptions &Opts,
     Str[5] = '0' + (OsVersion.getSubminor().getValueOr(0) % 10);
     Str[6] = '\0';
   }
-  Builder.defineMacro("__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__", Str);
+  // FIXME: do we want this? Builder.defineMacro("__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__", Str);
 
   // Tell users about the kernel if there is one.
   if (Triple.isOSRavynOS())

@@ -130,11 +130,15 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
   case llvm::Triple::aarch64_32:
     if (Triple.isOSDarwin())
       return new DarwinAArch64TargetInfo(Triple, Opts);
+    if (Triple.isOSRavynOS())
+      return new RavynOSAArch64TargetInfo(Triple, Opts);
 
     return nullptr;
   case llvm::Triple::aarch64:
     if (Triple.isOSDarwin())
       return new DarwinAArch64TargetInfo(Triple, Opts);
+    if (Triple.isOSRavynOS())
+      return new RavynOSAArch64TargetInfo(Triple, Opts);
 
     switch (os) {
     case llvm::Triple::CloudABI:
@@ -543,8 +547,10 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
     }
 
   case llvm::Triple::x86_64:
-    if (Triple.isOSDarwin() || Triple.isOSBinFormatMachO())
+    if (Triple.isOSDarwin())
       return new DarwinX86_64TargetInfo(Triple, Opts);
+    if (Triple.isOSRavynOS() || Triple.isOSBinFormatMachO()) 
+      return new RavynOSX86_64TargetInfo(Triple, Opts);
 
     switch (os) {
     case llvm::Triple::Ananas:

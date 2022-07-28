@@ -227,7 +227,7 @@ void InitHeaderSearch::AddDefaultCIncludePaths(const llvm::Triple &triple,
                                             const HeaderSearchOptions &HSOpts) {
   llvm::Triple::OSType os = triple.getOS();
 
-  if (triple.isOSDarwin()) {
+  if (triple.isOSDarwin() || triple.isOSRavynOS()) {
     llvm_unreachable("Include management is handled in the driver.");
   }
 
@@ -386,7 +386,7 @@ void InitHeaderSearch::AddDefaultCPlusPlusIncludePaths(
   llvm::Triple::OSType os = triple.getOS();
   // FIXME: temporary hack: hard-coded paths.
 
-  if (triple.isOSDarwin()) {
+  if (triple.isOSDarwin() || triple.isOSRavynOS()) {
     llvm_unreachable("Include management is handled in the driver.");
   }
 
@@ -455,14 +455,24 @@ void InitHeaderSearch::AddDefaultIncludePaths(const LangOptions &Lang,
   }
 
   // All header search logic is handled in the Driver for Darwin.
-  //if (triple.isOSDarwin()) {
+  if (triple.isOSDarwin()) {
     if (HSOpts.UseStandardSystemIncludes) {
       // Add the default framework include paths on Darwin.
       AddPath("/System/Library/Frameworks", System, true);
       AddPath("/Library/Frameworks", System, true);
     }
-    //return;
-  //}
+    return;
+  }
+
+  // All header search logic is handled in the Driver for ravynOS
+  if (triple.isOSRavynOS()) {
+    if (HSOpts.UseStandardSystemIncludes) {
+      // Add the default framework include paths
+      AddPath("/System/Library/Frameworks", System, true);
+      AddPath("/Library/Frameworks", System, true);
+    }
+    return;
+  }
 
   if (Lang.CPlusPlus && !Lang.AsmPreprocessor &&
       HSOpts.UseStandardCXXIncludes && HSOpts.UseStandardSystemIncludes) {

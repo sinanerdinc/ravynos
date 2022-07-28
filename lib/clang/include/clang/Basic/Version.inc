@@ -6,4 +6,4 @@
 #define	CLANG_VERSION_MINOR		0
 #define	CLANG_VERSION_PATCHLEVEL	5
 
-#define	CLANG_VENDOR			"ravynOS"
+#define	CLANG_VENDOR			"RavynSoft "

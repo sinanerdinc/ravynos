@@ -38,9 +38,9 @@ static VersionTuple minimumMacCatalystDeploymentTarget() {
   return VersionTuple(13, 1);
 }
 
-llvm::Triple::ArchType ravynOS::getArchTypeForMachOArchName(StringRef Str) {
+llvm::Triple::ArchType ravynos::getArchTypeForMachOArchName(StringRef Str) {
   // See arch(3) and llvm-gcc's driver-driver.c. We don't implement support for
-  // archs which RavynOS doesn't use.
+  // archs which ravynOS doesn't use.
 
   // The matching this routine does is fairly pointless, since it is neither the
   // complete architecture list, nor a reasonable subset. The problem is that
@@ -48,7 +48,7 @@ llvm::Triple::ArchType ravynOS::getArchTypeForMachOArchName(StringRef Str) {
   // handling to the architecture name, so we need to be careful before removing
   // support for it.
 
-  // This code must be kept in sync with Clang's RavynOS specific argument
+  // This code must be kept in sync with Clang's ravynOS specific argument
   // translation.
 
   return llvm::StringSwitch<llvm::Triple::ArchType>(Str)
@@ -74,7 +74,7 @@ llvm::Triple::ArchType ravynOS::getArchTypeForMachOArchName(StringRef Str) {
       .Default(llvm::Triple::UnknownArch);
 }
 
-void ravynOS::setTripleTypeForMachOArchName(llvm::Triple &T, StringRef Str) {
+void ravynos::setTripleTypeForMachOArchName(llvm::Triple &T, StringRef Str) {
   const llvm::Triple::ArchType Arch = getArchTypeForMachOArchName(Str);
   llvm::ARM::ArchKind ArchKind = llvm::ARM::parseArch(Str);
   T.setArch(Arch);
@@ -89,7 +89,7 @@ void ravynOS::setTripleTypeForMachOArchName(llvm::Triple &T, StringRef Str) {
   }
 }
 
-void ravynOS::Assembler::ConstructJob(Compilation &C, const JobAction &JA,
+void ravynos::Assembler::ConstructJob(Compilation &C, const JobAction &JA,
                                      const InputInfo &Output,
                                      const InputInfoList &Inputs,
                                      const ArgList &Args,
@@ -147,9 +147,9 @@ void ravynOS::Assembler::ConstructJob(Compilation &C, const JobAction &JA,
                                          Exec, CmdArgs, Inputs, Output));
 }
 
-void ravynOS::MachOTool::anchor() {}
+void ravynos::MachOTool::anchor() {}
 
-void ravynOS::MachOTool::AddMachOArch(const ArgList &Args,
+void ravynos::MachOTool::AddMachOArch(const ArgList &Args,
                                      ArgStringList &CmdArgs) const {
   StringRef ArchName = getMachOToolChain().getMachOArchName(Args);
 
@@ -162,7 +162,7 @@ void ravynOS::MachOTool::AddMachOArch(const ArgList &Args,
     CmdArgs.push_back("-force_cpusubtype_ALL");
 }
 
-bool ravynOS::Linker::NeedsTempPath(const InputInfoList &Inputs) const {
+bool ravynos::Linker::NeedsTempPath(const InputInfoList &Inputs) const {
   // We only need to generate a temp path for LTO if we aren't compiling object
   // files. When compiling source files, we run 'dsymutil' after linking. We
   // don't run 'dsymutil' when compiling object files.
@@ -196,7 +196,7 @@ static bool shouldLinkerNotDedup(bool IsLinkerOnlyAction, const ArgList &Args) {
   return false;
 }
 
-void ravynOS::Linker::AddLinkArgs(Compilation &C, const ArgList &Args,
+void ravynos::Linker::AddLinkArgs(Compilation &C, const ArgList &Args,
                                  ArgStringList &CmdArgs,
                                  const InputInfoList &Inputs,
                                  unsigned Version[5], bool LinkerIsLLD) const {
@@ -507,7 +507,7 @@ static void renderRemarksOptions(const ArgList &Args, ArgStringList &CmdArgs,
   }
 }
 
-void ravynOS::Linker::ConstructJob(Compilation &C, const JobAction &JA,
+void ravynos::Linker::ConstructJob(Compilation &C, const JobAction &JA,
                                   const InputInfo &Output,
                                   const InputInfoList &Inputs,
                                   const ArgList &Args,
@@ -717,7 +717,7 @@ void ravynOS::Linker::ConstructJob(Compilation &C, const JobAction &JA,
   C.addCommand(std::move(Cmd));
 }
 
-void ravynOS::StaticLibTool::ConstructJob(Compilation &C, const JobAction &JA,
+void ravynos::StaticLibTool::ConstructJob(Compilation &C, const JobAction &JA,
                                          const InputInfo &Output,
                                          const InputInfoList &Inputs,
                                          const ArgList &Args,
@@ -765,7 +765,7 @@ void ravynOS::StaticLibTool::ConstructJob(Compilation &C, const JobAction &JA,
                                          Exec, CmdArgs, Inputs, Output));
 }
 
-void ravynOS::Lipo::ConstructJob(Compilation &C, const JobAction &JA,
+void ravynos::Lipo::ConstructJob(Compilation &C, const JobAction &JA,
                                 const InputInfo &Output,
                                 const InputInfoList &Inputs,
                                 const ArgList &Args,
@@ -788,7 +788,7 @@ void ravynOS::Lipo::ConstructJob(Compilation &C, const JobAction &JA,
                                          Exec, CmdArgs, Inputs, Output));
 }
 
-void ravynOS::Dsymutil::ConstructJob(Compilation &C, const JobAction &JA,
+void ravynos::Dsymutil::ConstructJob(Compilation &C, const JobAction &JA,
                                     const InputInfo &Output,
                                     const InputInfoList &Inputs,
                                     const ArgList &Args,
@@ -809,7 +809,7 @@ void ravynOS::Dsymutil::ConstructJob(Compilation &C, const JobAction &JA,
                                          Exec, CmdArgs, Inputs, Output));
 }
 
-void ravynOS::VerifyDebug::ConstructJob(Compilation &C, const JobAction &JA,
+void ravynos::VerifyDebug::ConstructJob(Compilation &C, const JobAction &JA,
                                        const InputInfo &Output,
                                        const InputInfoList &Inputs,
                                        const ArgList &Args,
@@ -833,30 +833,10 @@ void ravynOS::VerifyDebug::ConstructJob(Compilation &C, const JobAction &JA,
                                          Exec, CmdArgs, Inputs, Output));
 }
 
-MachO::MachO(const Driver &D, const llvm::Triple &Triple, const ArgList &Args)
-    : ToolChain(D, Triple, Args) {
-  // We expect 'as', 'ld', etc. to be adjacent to our install dir.
-  getProgramPaths().push_back(getDriver().getInstalledDir());
-  if (getDriver().getInstalledDir() != getDriver().Dir)
-    getProgramPaths().push_back(getDriver().Dir);
-}
-
-/// RavynOS - RavynOS tool chain for i386 and x86_64.
+/// ravynOS tool chain for i386 and x86_64.
 RavynOS::RavynOS(const Driver &D, const llvm::Triple &Triple, const ArgList &Args)
     : MachO(D, Triple, Args), TargetInitialized(false),
       CudaInstallation(D, Triple, Args), RocmInstallation(D, Triple, Args) {}
-
-types::ID MachO::LookupTypeForExtension(StringRef Ext) const {
-  types::ID Ty = ToolChain::LookupTypeForExtension(Ext);
-
-  // RavynOS always preprocesses assembly files (unless -x is used explicitly).
-  if (Ty == types::TY_PP_Asm)
-    return types::TY_Asm;
-
-  return Ty;
-}
-
-bool MachO::HasNativeLLVMSupport() const { return true; }
 
 ToolChain::CXXStdlibType RavynOS::GetDefaultCXXStdlibType() const {
     return ToolChain::CST_Libcxx;
@@ -924,37 +904,7 @@ static const char *ArmMachOArchNameCPU(StringRef CPU) {
   return Arch.data();
 }
 
-StringRef MachO::getMachOArchName(const ArgList &Args) const {
-  switch (getTriple().getArch()) {
-  default:
-    return getDefaultUniversalArchName();
-
-  case llvm::Triple::aarch64_32:
-    return "arm64_32";
-
-  case llvm::Triple::aarch64: {
-    if (getTriple().isArm64e())
-      return "arm64e";
-    return "arm64";
-  }
-
-  case llvm::Triple::thumb:
-  case llvm::Triple::arm:
-    if (const Arg *A = Args.getLastArg(clang::driver::options::OPT_march_EQ))
-      if (const char *Arch = ArmMachOArchName(A->getValue()))
-        return Arch;
-
-    if (const Arg *A = Args.getLastArg(options::OPT_mcpu_EQ))
-      if (const char *Arch = ArmMachOArchNameCPU(A->getValue()))
-        return Arch;
-
-    return "arm";
-  }
-}
-
 RavynOS::~RavynOS() {}
-
-MachO::~MachO() {}
 
 std::string RavynOS::ComputeEffectiveClangTriple(const ArgList &Args,
                                                 types::ID InputType) const {
@@ -966,40 +916,11 @@ std::string RavynOS::ComputeEffectiveClangTriple(const ArgList &Args,
     return Triple.getTriple();
 
   SmallString<16> Str;
-  Str += "ravynOS";
+  Str += "ravynos";
   Str += getTripleTargetVersion().getAsString();
   Triple.setOSName(Str);
 
   return Triple.getTriple();
-}
-
-Tool *MachO::getTool(Action::ActionClass AC) const {
-  switch (AC) {
-  case Action::LipoJobClass:
-    if (!Lipo)
-      Lipo.reset(new tools::ravynOS::Lipo(*this));
-    return Lipo.get();
-  case Action::DsymutilJobClass:
-    if (!Dsymutil)
-      Dsymutil.reset(new tools::ravynOS::Dsymutil(*this));
-    return Dsymutil.get();
-  case Action::VerifyDebugInfoJobClass:
-    if (!VerifyDebug)
-      VerifyDebug.reset(new tools::ravynOS::VerifyDebug(*this));
-    return VerifyDebug.get();
-  default:
-    return ToolChain::getTool(AC);
-  }
-}
-
-Tool *MachO::buildLinker() const { return new tools::ravynOS::Linker(*this); }
-
-Tool *MachO::buildStaticLibTool() const {
-  return new tools::ravynOS::StaticLibTool(*this);
-}
-
-Tool *MachO::buildAssembler() const {
-  return new tools::ravynOS::Assembler(*this);
 }
 
 RavynOSClang::RavynOSClang(const Driver &D, const llvm::Triple &Triple,
@@ -1038,53 +959,6 @@ unsigned RavynOSClang::GetDefaultDwarfVersion() const {
   return 4;
 }
 
-void MachO::AddLinkRuntimeLib(const ArgList &Args, ArgStringList &CmdArgs,
-                              StringRef Component, RuntimeLinkOptions Opts,
-                              bool IsShared) const {
-  SmallString<64> RavynOSLibName = StringRef("libclang_rt.");
-  // an RavynOS the builtins compomnent is not in the library name
-  if (Component != "builtins") {
-    RavynOSLibName += Component;
-    if (!(Opts & RLO_IsEmbedded))
-      RavynOSLibName += "_";
-  }
-
-  RavynOSLibName += getOSLibraryNameSuffix();
-  RavynOSLibName += IsShared ? "_dynamic.dylib" : ".a";
-  SmallString<128> Dir(getDriver().ResourceDir);
-  llvm::sys::path::append(
-      Dir, "lib", (Opts & RLO_IsEmbedded) ? "macho_embedded" : "ravynOS");
-
-  SmallString<128> P(Dir);
-  llvm::sys::path::append(P, RavynOSLibName);
-
-  // For now, allow missing resource libraries to support developers who may
-  // not have compiler-rt checked out or integrated into their build (unless
-  // we explicitly force linking with this library).
-  if ((Opts & RLO_AlwaysLink) || getVFS().exists(P)) {
-    const char *LibArg = Args.MakeArgString(P);
-    CmdArgs.push_back(LibArg);
-  }
-
-  // Adding the rpaths might negatively interact when other rpaths are involved,
-  // so we should make sure we add the rpaths last, after all user-specified
-  // rpaths. This is currently true from this place, but we need to be
-  // careful if this function is ever called before user's rpaths are emitted.
-  if (Opts & RLO_AddRPath) {
-    assert(RavynOSLibName.endswith(".dylib") && "must be a dynamic library");
-
-    // Add @executable_path to rpath to support having the dylib copied with
-    // the executable.
-    CmdArgs.push_back("-rpath");
-    CmdArgs.push_back("@executable_path");
-
-    // Add the path to the resource dir to rpath to support using the dylib
-    // from the default location without copying.
-    CmdArgs.push_back("-rpath");
-    CmdArgs.push_back(Args.MakeArgString(Dir));
-  }
-}
-
 StringRef RavynOS::getPlatformFamily() const {
   return "ravynOS";
 }
@@ -1102,7 +976,7 @@ StringRef RavynOS::getSDKName(StringRef isysroot) {
 }
 
 StringRef RavynOS::getOSLibraryNameSuffix(bool IgnoreSim) const {
-  return "os";
+  return "";
 }
 
 /// Check if the link command contains a symbol export directive.
@@ -1198,7 +1072,7 @@ ToolChain::RuntimeLibType RavynOSClang::GetRuntimeLibType(
     StringRef Value = A->getValue();
     if (Value != "compiler-rt")
       getDriver().Diag(clang::diag::err_drv_unsupported_rtlib_for_platform)
-          << Value << "ravynOS";
+          << Value << "ravynos";
   }
 
   return ToolChain::RLT_CompilerRT;
@@ -1268,20 +1142,12 @@ void RavynOSClang::AddLinkRuntimeLibArgs(const ArgList &Args,
 
 /// Returns the most appropriate macOS target version for the current process.
 ///
+/// On Darwin:
 /// If the macOS SDK version is the same or earlier than the system version,
 /// then the SDK version is returned. Otherwise the system version is returned.
+/// RavynOS does not really have SDKs yet, so we just return the SDK version
+/// that was provided
 static std::string getSystemOrSDKVersion(StringRef SDKVersion) {
-  unsigned Major, Minor, Micro;
-  llvm::Triple SystemTriple(llvm::sys::getProcessTriple());
-  VersionTuple SystemVersion;
-  SystemTriple.getOSVersion(SystemVersion);
-  bool HadExtra;
-  if (!Driver::GetReleaseVersion(SDKVersion, Major, Minor, Micro,
-                                 HadExtra))
-    return std::string(SDKVersion);
-  VersionTuple SDKVersion(Major, Minor, Micro);
-  if (SDKVersion > SystemVersion)
-    return SystemVersion.getAsString();
   return std::string(SDKVersion);
 }
 
@@ -1365,18 +1231,18 @@ struct RavynOSPlatform {
     case DeploymentTargetEnv:
       return (llvm::Twine(EnvVarName) + "=" + OSVersion).str();
     }
-    llvm_unreachable("Unsupported RavynOS Source Kind");
+    llvm_unreachable("Unsupported ravynOS Source Kind");
   }
 
   void setEnvironment(llvm::Triple::EnvironmentType EnvType,
                       const VersionTuple &OSVersion,
-                      const Optional<RavynOSSDKInfo> &SDKInfo) {
+                      const Optional<DarwinSDKInfo> &SDKInfo) {
     // nop
   }
 
   static RavynOSPlatform
   createFromTarget(const llvm::Triple &TT, StringRef OSVersion, Arg *A,
-                   const Optional<RavynOSSDKInfo> &SDKInfo) {
+                   const Optional<DarwinSDKInfo> &SDKInfo) {
     RavynOSPlatform Result(TargetArg, getPlatformFromOS(TT.getOS()), OSVersion,
                           A);
     VersionTuple OsVersion = TT.getOSVersion();
@@ -1388,7 +1254,7 @@ struct RavynOSPlatform {
   static RavynOSPlatform
   createFromMTargetOS(llvm::Triple::OSType OS, VersionTuple OSVersion,
                       llvm::Triple::EnvironmentType Environment, Arg *A,
-                      const Optional<RavynOSSDKInfo> &SDKInfo) {
+                      const Optional<DarwinSDKInfo> &SDKInfo) {
     RavynOSPlatform Result(MTargetOSArg, getPlatformFromOS(OS),
                           OSVersion.getAsString(), A);
     Result.InferSimulatorFromArch = false;
@@ -1410,8 +1276,6 @@ struct RavynOSPlatform {
                                       StringRef Value,
                                       bool IsSimulator = false) {
     RavynOSPlatform Result(InferredFromSDK, Platform, Value);
-    if (IsSimulator)
-      Result.Environment = RavynOSEnvironmentKind::Simulator;
     Result.InferSimulatorFromArch = false;
     return Result;
   }
@@ -1423,13 +1287,13 @@ struct RavynOSPlatform {
   /// Constructs an inferred SDKInfo value based on the version inferred from
   /// the SDK path itself. Only works for values that were created by inferring
   /// the platform from the SDKPath.
-  RavynOSSDKInfo inferSDKInfo() {
+  DarwinSDKInfo inferSDKInfo() {
     assert(Kind == InferredFromSDK && "can infer SDK info only");
     llvm::VersionTuple Version;
     bool IsValid = !Version.tryParse(OSVersion);
     (void)IsValid;
     assert(IsValid && "invalid SDK version");
-    return RavynOSSDKInfo(
+    return DarwinSDKInfo(
         Version,
         /*MaximumDeploymentTarget=*/VersionTuple(Version.getMajor(), 0, 99));
   }
@@ -1442,7 +1306,7 @@ private:
       : Kind(Kind), Platform(Platform), OSVersion(Value), Argument(Argument) {}
 
   static RavynOSPlatformKind getPlatformFromOS(llvm::Triple::OSType OS) {
-    return RavynOSPlatformKind::RavynOS;
+    return RavynOSPlatformKind::ravynOS;
   }
 
   SourceKind Kind;
@@ -1462,13 +1326,14 @@ getDeploymentTargetFromOSVersionArg(DerivedArgList &Args,
                                     const Driver &TheDriver) {
   Arg *OSXVersion = Args.getLastArg(options::OPT_mmacosx_version_min_EQ);
   if (OSXVersion) {
-    return RavynOSPlatform::createOSVersionArg(RavynOS::RavynOS, OSXVersion);
+    return RavynOSPlatform::createOSVersionArg(RavynOS::ravynOS, OSXVersion);
   }
   return None;
 }
 
 /// Returns the deployment target that's specified using the
 /// OS_DEPLOYMENT_TARGET environment variable.
+// FIXME: do translation here from Darwin platforms?
 Optional<RavynOSPlatform>
 getDeploymentTargetFromEnvironmentVariables(const Driver &TheDriver,
                                             const llvm::Triple &Triple) {
@@ -1506,7 +1371,7 @@ static StringRef dropSDKNamePrefix(StringRef SDKName) {
 /// it's available.
 Optional<RavynOSPlatform>
 inferDeploymentTargetFromSDK(DerivedArgList &Args,
-                             const Optional<RavynOSSDKInfo> &SDKInfo) {
+                             const Optional<DarwinSDKInfo> &SDKInfo) {
   const Arg *A = Args.getLastArg(options::OPT_isysroot);
   if (!A)
     return None;
@@ -1532,8 +1397,8 @@ inferDeploymentTargetFromSDK(DerivedArgList &Args,
 
   auto CreatePlatformFromSDKName =
       [&](StringRef SDK) -> Optional<RavynOSPlatform> {
-    return RavynOSPlatform::createFromSDK(RavynOS::RavynOS,
-                                           getSystemOrSDKOSVersion(Version));
+    return RavynOSPlatform::createFromSDK(RavynOS::ravynOS,
+                                           getSystemOrSDKVersion(Version));
   };
   if (auto Result = CreatePlatformFromSDKName(SDK))
     return Result;
@@ -1549,12 +1414,11 @@ std::string getOSVersion(llvm::Triple::OSType OS, const llvm::Triple &Triple,
   case llvm::Triple::RavynOS:
     // If there is no version specified on triple, and both host and target are
     // macos, use the host triple to infer OS version.
-    if (Triple.isRavynOS() && SystemTriple.isRavynOS() &&
+    if (Triple.isOSRavynOS() && SystemTriple.isOSRavynOS() &&
         !Triple.getOSMajorVersion())
-      SystemTriple.getOSVersion(OsVersion);
-    else if (!Triple.getOSVersion(OsVersion))
-      TheDriver.Diag(diag::err_drv_invalid_ravynOS_version)
-          << Triple.getOSName();
+      OsVersion = SystemTriple.getOSVersion();
+    else
+      OsVersion = Triple.getOSVersion();
     break;
   default:
     llvm_unreachable("Unexpected OS type");
@@ -1576,7 +1440,7 @@ inferDeploymentTargetFromArch(DerivedArgList &Args, const RavynOS &Toolchain,
   llvm::Triple::OSType OSTy = llvm::Triple::UnknownOS;
 
   StringRef MachOArchName = Toolchain.getMachOArchName(Args);
-  OSTy = llvm::Triple::ravynOS;
+  OSTy = llvm::Triple::RavynOS;
   return RavynOSPlatform::createFromArch(OSTy,
                                         getOSVersion(OSTy, Triple, TheDriver));
 }
@@ -1584,7 +1448,7 @@ inferDeploymentTargetFromArch(DerivedArgList &Args, const RavynOS &Toolchain,
 /// Returns the deployment target that's specified using the -target option.
 Optional<RavynOSPlatform> getDeploymentTargetFromTargetArg(
     DerivedArgList &Args, const llvm::Triple &Triple, const Driver &TheDriver,
-    const Optional<RavynOSSDKInfo> &SDKInfo) {
+    const Optional<DarwinSDKInfo> &SDKInfo) {
   if (!Args.hasArg(options::OPT_target))
     return None;
   if (Triple.getOS() == llvm::Triple::RavynOS ||
@@ -1599,11 +1463,11 @@ Optional<RavynOSPlatform> getDeploymentTargetFromTargetArg(
 Optional<RavynOSPlatform>
 getDeploymentTargetFromMTargetOSArg(DerivedArgList &Args,
                                     const Driver &TheDriver,
-                                    const Optional<RavynOSSDKInfo> &SDKInfo) {
+                                    const Optional<DarwinSDKInfo> &SDKInfo) {
   auto *A = Args.getLastArg(options::OPT_mtargetos_EQ);
   llvm::Triple TT(llvm::Twine("unknown-ravynsoft-") + A->getValue());
   switch (TT.getOS()) {
-  case llvm::Triple::ravynOS:
+  case llvm::Triple::RavynOS:
     break;
   default:
     TheDriver.Diag(diag::err_drv_invalid_os_in_arg)
@@ -1621,17 +1485,17 @@ getDeploymentTargetFromMTargetOSArg(DerivedArgList &Args,
                                              TT.getEnvironment(), A, SDKInfo);
 }
 
-Optional<RavynOSSDKInfo> parseSDKSettings(llvm::vfs::FileSystem &VFS,
+Optional<DarwinSDKInfo> parseSDKSettings(llvm::vfs::FileSystem &VFS,
                                          const ArgList &Args,
                                          const Driver &TheDriver) {
   const Arg *A = Args.getLastArg(options::OPT_isysroot);
   if (!A)
     return None;
   StringRef isysroot = A->getValue();
-  auto SDKInfoOrErr = parseRavynOSSDKInfo(VFS, isysroot);
+  auto SDKInfoOrErr = parseDarwinSDKInfo(VFS, isysroot);
   if (!SDKInfoOrErr) {
     llvm::consumeError(SDKInfoOrErr.takeError());
-    TheDriver.Diag(diag::warn_drv_ravynOS_sdk_invalid_settings);
+    TheDriver.Diag(diag::warn_drv_darwin_sdk_invalid_settings);
     return None;
   }
   return *SDKInfoOrErr;
@@ -1752,7 +1616,7 @@ void RavynOS::AddDeploymentTarget(DerivedArgList &Args) const {
           inferDeploymentTargetFromArch(Args, *this, getTriple(), getDriver());
   }
 
-  assert(OSTarget && "Unable to infer RavynOS variant");
+  assert(OSTarget && "Unable to infer ravynOS variant");
   OSTarget->addOSVersionMinArgument(Args, Opts);
   RavynOSPlatformKind Platform = OSTarget->getPlatform();
 
@@ -1766,12 +1630,10 @@ void RavynOS::AddDeploymentTarget(DerivedArgList &Args) const {
       getDriver().Diag(diag::err_drv_invalid_version_number)
           << OSTarget->getAsString(Args, Opts);
   } else
-    llvm_unreachable("unknown kind of RavynOS platform");
+    llvm_unreachable("unknown kind of ravynOS platform");
 
   RavynOSEnvironmentKind Environment = OSTarget->getEnvironment();
   VersionTuple NativeTargetVersion;
-  if (Environment == MacCatalyst)
-    NativeTargetVersion = OSTarget->getNativeTargetVersion();
   setTarget(Platform, Environment, Major, Minor, Micro, NativeTargetVersion);
 
   if (const Arg *A = Args.getLastArg(options::OPT_isysroot)) {
@@ -2052,203 +1914,6 @@ void RavynOSClang::AddCCKextLibArgs(const ArgList &Args,
     CmdArgs.push_back(Args.MakeArgString(P));
 }
 
-DerivedArgList *MachO::TranslateArgs(const DerivedArgList &Args,
-                                     StringRef BoundArch,
-                                     Action::OffloadKind) const {
-  DerivedArgList *DAL = new DerivedArgList(Args.getBaseArgs());
-  const OptTable &Opts = getDriver().getOpts();
-
-  // FIXME: We really want to get out of the tool chain level argument
-  // translation business, as it makes the driver functionality much
-  // more opaque. For now, we follow gcc closely solely for the
-  // purpose of easily achieving feature parity & testability. Once we
-  // have something that works, we should reevaluate each translation
-  // and try to push it down into tool specific logic.
-
-  for (Arg *A : Args) {
-    if (A->getOption().matches(options::OPT_Xarch__)) {
-      // Skip this argument unless the architecture matches either the toolchain
-      // triple arch, or the arch being bound.
-      llvm::Triple::ArchType XarchArch =
-          tools::ravynOS::getArchTypeForMachOArchName(A->getValue(0));
-      if (!(XarchArch == getArch() ||
-            (!BoundArch.empty() &&
-             XarchArch ==
-                 tools::ravynOS::getArchTypeForMachOArchName(BoundArch))))
-        continue;
-
-      Arg *OriginalArg = A;
-      TranslateXarchArgs(Args, A, DAL);
-
-      // Linker input arguments require custom handling. The problem is that we
-      // have already constructed the phase actions, so we can not treat them as
-      // "input arguments".
-      if (A->getOption().hasFlag(options::LinkerInput)) {
-        // Convert the argument into individual Zlinker_input_args.
-        for (const char *Value : A->getValues()) {
-          DAL->AddSeparateArg(
-              OriginalArg, Opts.getOption(options::OPT_Zlinker_input), Value);
-        }
-        continue;
-      }
-    }
-
-    // Sob. These is strictly gcc compatible for the time being. Apple
-    // gcc translates options twice, which means that self-expanding
-    // options add duplicates.
-    switch ((options::ID)A->getOption().getID()) {
-    default:
-      DAL->append(A);
-      break;
-
-    case options::OPT_mkernel:
-    case options::OPT_fapple_kext:
-      DAL->append(A);
-      DAL->AddFlagArg(A, Opts.getOption(options::OPT_static));
-      break;
-
-    case options::OPT_dependency_file:
-      DAL->AddSeparateArg(A, Opts.getOption(options::OPT_MF), A->getValue());
-      break;
-
-    case options::OPT_gfull:
-      DAL->AddFlagArg(A, Opts.getOption(options::OPT_g_Flag));
-      DAL->AddFlagArg(
-          A, Opts.getOption(options::OPT_fno_eliminate_unused_debug_symbols));
-      break;
-
-    case options::OPT_gused:
-      DAL->AddFlagArg(A, Opts.getOption(options::OPT_g_Flag));
-      DAL->AddFlagArg(
-          A, Opts.getOption(options::OPT_feliminate_unused_debug_symbols));
-      break;
-
-    case options::OPT_shared:
-      DAL->AddFlagArg(A, Opts.getOption(options::OPT_dynamiclib));
-      break;
-
-    case options::OPT_fconstant_cfstrings:
-      DAL->AddFlagArg(A, Opts.getOption(options::OPT_mconstant_cfstrings));
-      break;
-
-    case options::OPT_fno_constant_cfstrings:
-      DAL->AddFlagArg(A, Opts.getOption(options::OPT_mno_constant_cfstrings));
-      break;
-
-    case options::OPT_Wnonportable_cfstrings:
-      DAL->AddFlagArg(A,
-                      Opts.getOption(options::OPT_mwarn_nonportable_cfstrings));
-      break;
-
-    case options::OPT_Wno_nonportable_cfstrings:
-      DAL->AddFlagArg(
-          A, Opts.getOption(options::OPT_mno_warn_nonportable_cfstrings));
-      break;
-
-    case options::OPT_fpascal_strings:
-      DAL->AddFlagArg(A, Opts.getOption(options::OPT_mpascal_strings));
-      break;
-
-    case options::OPT_fno_pascal_strings:
-      DAL->AddFlagArg(A, Opts.getOption(options::OPT_mno_pascal_strings));
-      break;
-    }
-  }
-
-  // Add the arch options based on the particular spelling of -arch, to match
-  // how the driver driver works.
-  if (!BoundArch.empty()) {
-    StringRef Name = BoundArch;
-    const Option MCpu = Opts.getOption(options::OPT_mcpu_EQ);
-    const Option MArch = Opts.getOption(clang::driver::options::OPT_march_EQ);
-
-    // This code must be kept in sync with LLVM's getArchTypeForRavynOSArch,
-    // which defines the list of which architectures we accept.
-    if (Name == "ppc")
-      ;
-    else if (Name == "ppc601")
-      DAL->AddJoinedArg(nullptr, MCpu, "601");
-    else if (Name == "ppc603")
-      DAL->AddJoinedArg(nullptr, MCpu, "603");
-    else if (Name == "ppc604")
-      DAL->AddJoinedArg(nullptr, MCpu, "604");
-    else if (Name == "ppc604e")
-      DAL->AddJoinedArg(nullptr, MCpu, "604e");
-    else if (Name == "ppc750")
-      DAL->AddJoinedArg(nullptr, MCpu, "750");
-    else if (Name == "ppc7400")
-      DAL->AddJoinedArg(nullptr, MCpu, "7400");
-    else if (Name == "ppc7450")
-      DAL->AddJoinedArg(nullptr, MCpu, "7450");
-    else if (Name == "ppc970")
-      DAL->AddJoinedArg(nullptr, MCpu, "970");
-
-    else if (Name == "ppc64" || Name == "ppc64le")
-      DAL->AddFlagArg(nullptr, Opts.getOption(options::OPT_m64));
-
-    else if (Name == "i386")
-      ;
-    else if (Name == "i486")
-      DAL->AddJoinedArg(nullptr, MArch, "i486");
-    else if (Name == "i586")
-      DAL->AddJoinedArg(nullptr, MArch, "i586");
-    else if (Name == "i686")
-      DAL->AddJoinedArg(nullptr, MArch, "i686");
-    else if (Name == "pentium")
-      DAL->AddJoinedArg(nullptr, MArch, "pentium");
-    else if (Name == "pentium2")
-      DAL->AddJoinedArg(nullptr, MArch, "pentium2");
-    else if (Name == "pentpro")
-      DAL->AddJoinedArg(nullptr, MArch, "pentiumpro");
-    else if (Name == "pentIIm3")
-      DAL->AddJoinedArg(nullptr, MArch, "pentium2");
-
-    else if (Name == "x86_64" || Name == "x86_64h")
-      DAL->AddFlagArg(nullptr, Opts.getOption(options::OPT_m64));
-
-    else if (Name == "arm")
-      DAL->AddJoinedArg(nullptr, MArch, "armv4t");
-    else if (Name == "armv4t")
-      DAL->AddJoinedArg(nullptr, MArch, "armv4t");
-    else if (Name == "armv5")
-      DAL->AddJoinedArg(nullptr, MArch, "armv5tej");
-    else if (Name == "xscale")
-      DAL->AddJoinedArg(nullptr, MArch, "xscale");
-    else if (Name == "armv6")
-      DAL->AddJoinedArg(nullptr, MArch, "armv6k");
-    else if (Name == "armv6m")
-      DAL->AddJoinedArg(nullptr, MArch, "armv6m");
-    else if (Name == "armv7")
-      DAL->AddJoinedArg(nullptr, MArch, "armv7a");
-    else if (Name == "armv7em")
-      DAL->AddJoinedArg(nullptr, MArch, "armv7em");
-    else if (Name == "armv7k")
-      DAL->AddJoinedArg(nullptr, MArch, "armv7k");
-    else if (Name == "armv7m")
-      DAL->AddJoinedArg(nullptr, MArch, "armv7m");
-    else if (Name == "armv7s")
-      DAL->AddJoinedArg(nullptr, MArch, "armv7s");
-  }
-
-  return DAL;
-}
-
-void MachO::AddLinkRuntimeLibArgs(const ArgList &Args,
-                                  ArgStringList &CmdArgs,
-                                  bool ForceLinkBuiltinRT) const {
-  // Embedded targets are simple at the moment, not supporting sanitizers and
-  // with different libraries for each member of the product { static, PIC } x
-  // { hard-float, soft-float }
-  llvm::SmallString<32> CompilerRT = StringRef("");
-  CompilerRT +=
-      (tools::arm::getARMFloatABI(*this, Args) == tools::arm::FloatABI::Hard)
-          ? "hard"
-          : "soft";
-  CompilerRT += Args.hasArg(options::OPT_fPIC) ? "_pic" : "_static";
-
-  AddLinkRuntimeLib(Args, CmdArgs, CompilerRT, RLO_IsEmbedded);
-}
-
 bool RavynOS::isAlignedAllocationUnavailable() const {
   return false; // always available
 }
@@ -2321,7 +1986,7 @@ RavynOS::TranslateArgs(const DerivedArgList &Args, StringRef BoundArch,
     }
   }
 
-  auto Arch = tools::ravynOS::getArchTypeForMachOArchName(BoundArch);
+  auto Arch = tools::ravynos::getArchTypeForMachOArchName(BoundArch);
   if ((Arch == llvm::Triple::arm || Arch == llvm::Triple::thumb)) {
     if (Args.hasFlag(options::OPT_fomit_frame_pointer,
                      options::OPT_fno_omit_frame_pointer, false))
@@ -2330,21 +1995,6 @@ RavynOS::TranslateArgs(const DerivedArgList &Args, StringRef BoundArch,
   }
 
   return DAL;
-}
-
-bool MachO::IsUnwindTablesDefault(const ArgList &Args) const {
-  // Unwind tables are not emitted if -fno-exceptions is supplied (except when
-  // targeting x86_64).
-  return getArch() == llvm::Triple::x86_64 ||
-         (GetExceptionModel(Args) != llvm::ExceptionHandling::SjLj &&
-          Args.hasFlag(options::OPT_fexceptions, options::OPT_fno_exceptions,
-                       true));
-}
-
-bool MachO::UseDwarfDebugFlags() const {
-  if (const char *S = ::getenv("RC_DEBUG_OPTIONS"))
-    return S[0] != '\0';
-  return false;
 }
 
 llvm::ExceptionHandling RavynOS::GetExceptionModel(const ArgList &Args) const {
@@ -2364,20 +2014,6 @@ llvm::ExceptionHandling RavynOS::GetExceptionModel(const ArgList &Args) const {
 bool RavynOS::SupportsEmbeddedBitcode() const {
   assert(TargetInitialized && "Target not initialized!");
   return true;
-}
-
-bool MachO::isPICDefault() const { return true; }
-
-bool MachO::isPIEDefault(const llvm::opt::ArgList &Args) const { return false; }
-
-bool MachO::isPICDefaultForced() const {
-  return (getArch() == llvm::Triple::x86_64 ||
-          getArch() == llvm::Triple::aarch64);
-}
-
-bool MachO::SupportsProfiling() const {
-  // Profiling instrumentation is only supported on x86.
-  return getTriple().isX86();
 }
 
 void RavynOS::addMinVersionArgs(const ArgList &Args,

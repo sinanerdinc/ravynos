@@ -57,6 +57,7 @@ StringRef Triple::getArchTypeName(ArchType Kind) {
   case ppc:            return "powerpc";
   case ppcle:          return "powerpcle";
   case r600:           return "r600";
+  case ravynos:        return "ravynos";
   case renderscript32: return "renderscript32";
   case renderscript64: return "renderscript64";
   case riscv32:        return "riscv32";
@@ -183,6 +184,7 @@ StringRef Triple::getVendorTypeName(VendorType Kind) {
   case NVIDIA: return "nvidia";
   case OpenEmbedded: return "oe";
   case PC: return "pc";
+  case Ravynsoft: return "ravynsoft";
   case SCEI: return "scei";
   case SUSE: return "suse";
   }
@@ -222,6 +224,7 @@ StringRef Triple::getOSTypeName(OSType Kind) {
   case NetBSD: return "netbsd";
   case OpenBSD: return "openbsd";
   case PS4: return "ps4";
+  case RavynOS: return "ravynos";
   case RTEMS: return "rtems";
   case Solaris: return "solaris";
   case TvOS: return "tvos";
@@ -507,6 +510,7 @@ static Triple::VendorType parseVendor(StringRef VendorName) {
     .Case("mesa", Triple::Mesa)
     .Case("suse", Triple::SUSE)
     .Case("oe", Triple::OpenEmbedded)
+    .Case("ravynsoft", Triple::Ravynsoft)
     .Default(Triple::UnknownVendor);
 }
 
@@ -548,6 +552,7 @@ static Triple::OSType parseOS(StringRef OSName) {
     .StartsWith("hurd", Triple::Hurd)
     .StartsWith("wasi", Triple::WASI)
     .StartsWith("emscripten", Triple::Emscripten)
+    .StartsWith("ravynos", Triple::RavynOS)
     .Default(Triple::UnknownOS);
 }
 
@@ -708,7 +713,7 @@ static Triple::ObjectFormatType getDefaultFormat(const Triple &T) {
   case Triple::thumb:
   case Triple::x86:
   case Triple::x86_64:
-    if (T.isOSDarwin())
+    if (T.isOSDarwin() || T.isOSRavynOS())
       return Triple::MachO;
     else if (T.isOSWindows())
       return Triple::COFF;
@@ -1119,6 +1124,14 @@ VersionTuple Triple::getOSVersion() const {
     OSName.consume_front("macos");
 
   return parseVersionFromName(OSName);
+}
+
+bool Triple::getRavynOSVersion(VersionTuple &Version) const {
+  Version = getOSVersion();
+
+  if (Version.getMajor() == 0)
+    Version = VersionTuple(1); // default to 1.0
+  return true;
 }
 
 bool Triple::getMacOSXVersion(VersionTuple &Version) const {
