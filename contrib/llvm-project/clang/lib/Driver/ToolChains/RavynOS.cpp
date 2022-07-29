@@ -1142,14 +1142,26 @@ void RavynOSClang::AddLinkRuntimeLibArgs(const ArgList &Args,
 
 /// Returns the most appropriate macOS target version for the current process.
 ///
-/// On Darwin:
 /// If the macOS SDK version is the same or earlier than the system version,
 /// then the SDK version is returned. Otherwise the system version is returned.
-/// RavynOS does not really have SDKs yet, so we just return the SDK version
-/// that was provided
-static std::string getSystemOrSDKVersion(StringRef SDKVersion) {
-  return std::string(SDKVersion);
+/// This is mostly faked since ravynOS does not yet have actual SDKs
+static std::string getSystemOrSDKMacOSVersion(StringRef MacOSSDKVersion) {
+  unsigned Major, Minor, Micro;
+  llvm::Triple SystemTriple(llvm::sys::getProcessTriple());
+  if (!SystemTriple.isOSRavynOS())
+    return std::string(MacOSSDKVersion);
+  VersionTuple SystemVersion;
+  SystemTriple.getMacOSXVersion(SystemVersion);
+  bool HadExtra;
+  if (!Driver::GetReleaseVersion(MacOSSDKVersion, Major, Minor, Micro,
+                                 HadExtra))
+    return std::string(MacOSSDKVersion);
+  VersionTuple SDKVersion(Major, Minor, Micro);
+  if (SDKVersion > SystemVersion)
+    return SystemVersion.getAsString();
+  return std::string(MacOSSDKVersion);
 }
+
 
 namespace {
 
@@ -1213,7 +1225,7 @@ struct RavynOSPlatform {
            "Invalid kind");
     options::ID Opt;
     Opt = options::OPT_mmacosx_version_min_EQ;
-    Argument = Args.MakeJoinedArg(nullptr, Opts.getOption(Opt), OSVersion);
+    Argument = Args.MakeJoinedArg(nullptr, Opts.getOption(Opt), VersionTuple(10, 6, 0).getAsString());
     Args.append(Argument);
   }
 
@@ -1398,7 +1410,7 @@ inferDeploymentTargetFromSDK(DerivedArgList &Args,
   auto CreatePlatformFromSDKName =
       [&](StringRef SDK) -> Optional<RavynOSPlatform> {
     return RavynOSPlatform::createFromSDK(RavynOS::ravynOS,
-                                           getSystemOrSDKVersion(Version));
+                                           getSystemOrSDKMacOSVersion(Version));
   };
   if (auto Result = CreatePlatformFromSDKName(SDK))
     return Result;
@@ -1465,6 +1477,8 @@ getDeploymentTargetFromMTargetOSArg(DerivedArgList &Args,
                                     const Driver &TheDriver,
                                     const Optional<DarwinSDKInfo> &SDKInfo) {
   auto *A = Args.getLastArg(options::OPT_mtargetos_EQ);
+  if(!A)
+    return None;
   llvm::Triple TT(llvm::Twine("unknown-ravynsoft-") + A->getValue());
   switch (TT.getOS()) {
   case llvm::Triple::RavynOS:
@@ -1625,8 +1639,7 @@ void RavynOS::AddDeploymentTarget(DerivedArgList &Args) const {
   // Set the tool chain target information.
   if (Platform == ravynOS) {
     if (!Driver::GetReleaseVersion(OSTarget->getOSVersion(), Major, Minor,
-                                   Micro, HadExtra) ||
-        HadExtra || Major < 10 || Major >= 100 || Minor >= 100 || Micro >= 100)
+                                   Micro, HadExtra))
       getDriver().Diag(diag::err_drv_invalid_version_number)
           << OSTarget->getAsString(Args, Opts);
   } else

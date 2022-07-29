@@ -1171,6 +1171,9 @@ bool Triple::getMacOSXVersion(VersionTuple &Version) const {
     // IOS.
     Version = VersionTuple(10, 4);
     break;
+  case RavynOS:
+    Version = VersionTuple(10, 6);
+    break;
   }
   return true;
 }

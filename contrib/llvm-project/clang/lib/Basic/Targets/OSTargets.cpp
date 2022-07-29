@@ -27,6 +27,22 @@ void getRavynOSDefines(MacroBuilder &Builder, const LangOptions &Opts,
   Builder.defineMacro("__STDC_NO_THREADS__");
   Builder.defineMacro("__RAVYNOS__");
 
+  // FreeBSD defines; list based off of gcc output
+
+  unsigned Release = Triple.getOSMajorVersion();
+    if (Release == 0U)
+      Release = 14U;
+  unsigned CCVersion = FREEBSD_CC_VERSION;
+  if (CCVersion == 0U)
+    CCVersion = Release * 100000U + 1U;
+
+  Builder.defineMacro("__FreeBSD__", Twine(Release));
+  Builder.defineMacro("__FreeBSD_cc_version", Twine(CCVersion));
+  Builder.defineMacro("__KPRINTF_ATTRIBUTE__");
+  DefineStd(Builder, "unix", Opts);
+
+  Builder.defineMacro("__STDC_MB_MIGHT_NEQ_WC__", "1");
+
   // AddressSanitizer doesn't play well with source fortification, which is on
   // by default on RavynOS.
   if (Opts.Sanitize.has(SanitizerKind::Address))
