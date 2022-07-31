@@ -8,14 +8,10 @@ LLD_SRCS=	${LLVM_BASE}/lld
 
 PACKAGE=	lld
 PROG_CXX=	ld64
-MAN=
+MAN=            ld.lld.1
 MLINKS=		ld.lld.1 ld64.1
 # Man page directory
 .PATH:		${LLD_SRCS}/docs
-.if (!defined(TOOLS_PREFIX) && ${MK_LLD_IS_LD} != "no") || \
-    (defined(TOOLS_PREFIX) && ${MK_LLD_BOOTSTRAP} != "no")
-#SYMLINKS=	${PROG_CXX} ${BINDIR}/ld
-.endif
 
 .if ${MK_SHARED_TOOLCHAIN} == "no"
 NO_SHARED?= yes

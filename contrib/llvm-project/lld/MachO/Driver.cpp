@@ -603,6 +603,7 @@ static PlatformType parsePlatformVersion(const ArgList &args) {
   // TODO(compnerd) see if we can generate this case list via XMACROS
   PlatformType platform =
       StringSwitch<PlatformType>(lowerDash(platformStr))
+          .Cases("ravynos", "1", PLATFORM_MACOS)
           .Cases("macos", "1", PLATFORM_MACOS)
           .Cases("ios", "2", PLATFORM_IOS)
           .Cases("tvos", "3", PLATFORM_TVOS)

@@ -575,7 +575,14 @@ std::string ToolChain::GetProgramPath(const char *Name) const {
 
 std::string ToolChain::GetLinkerPath(bool *LinkerIsLLD) const {
   if (LinkerIsLLD)
+#if __RAVYNOS__
+    // RavynOS always uses LLD in its ld64 config so assume true unless
+    // they've specified an alternate linker. This is probably broken in
+    // some way but we are unlikely to support alternate linkers anyway
+    *LinkerIsLLD = true;
+#else
     *LinkerIsLLD = false;
+#endif
 
   // Get -fuse-ld= first to prevent -Wunused-command-line-argument. -fuse-ld= is
   // considered as the linker flavor, e.g. "bfd", "gold", or "lld".

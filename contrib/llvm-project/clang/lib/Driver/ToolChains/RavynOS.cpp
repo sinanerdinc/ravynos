@@ -2096,7 +2096,7 @@ static void addPgProfilingLinkArgs(const RavynOS &D, const ArgList &Args,
 
 static void addDefaultCRTLinkArgs(const RavynOS &D, const ArgList &Args,
                                   ArgStringList &CmdArgs) {
-  CmdArgs.push_back("-lcrt1.10.6.o");
+  CmdArgs.push_back("-lcrt1.o"); // FIXME implement versioning like Darwin driver
 }
 
 void RavynOS::addStartObjectFileArgs(const ArgList &Args,
