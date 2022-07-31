@@ -144,7 +144,14 @@ static int lldMain(int argc, const char **argv, llvm::raw_ostream &stdoutOS,
                    llvm::raw_ostream &stderrOS, bool exitEarly = true) {
   std::vector<const char *> args(argv, argv + argc);
   auto link = [&args]() {
-#if 1
+#if defined(__RAVYNOS__)
+#if defined(__ld64__)
+    return macho::link;
+#else
+    return elf::link;
+#endif
+#else
+#if defined(__FreeBSD__)
     // On FreeBSD we only build the ELF linker.
     return elf::link;
 #else
@@ -163,6 +170,7 @@ static int lldMain(int argc, const char **argv, llvm::raw_ostream &stdoutOS,
       die("lld is a generic driver.\n"
           "Invoke ld.lld (Unix), ld64.lld (macOS), lld-link (Windows), wasm-ld"
           " (WebAssembly) instead");
+#endif
 #endif
   };
   // Run the driver. If an error occurs, false will be returned.

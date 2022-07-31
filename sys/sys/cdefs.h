@@ -532,29 +532,55 @@
 #define	__strong_reference(sym,aliassym)	\
 	extern __typeof (sym) aliassym __attribute__ ((__alias__ (#sym)))
 #ifdef __STDC__
+#ifdef __APPLE_CC__
+#define	__weak_reference(sym,alias)	\
+	__asm__(".weak_reference " #alias);	\
+	__asm__(".equ "  #alias ", " #sym)
+#else
 #define	__weak_reference(sym,alias)	\
 	__asm__(".weak " #alias);	\
 	__asm__(".equ "  #alias ", " #sym)
+#endif
 #define	__warn_references(sym,msg)	\
 	__asm__(".section .gnu.warning." #sym);	\
 	__asm__(".asciz \"" msg "\"");	\
 	__asm__(".previous")
+#ifdef __APPLE_CC__
+#define	__sym_compat(sym,impl,verid)	\
+        __weak_reference(impl,sym@verid)
+#define	__sym_default(sym,impl,verid)	\
+        __weak_reference(impl,sym@verid)
+#else
 #define	__sym_compat(sym,impl,verid)	\
 	__asm__(".symver " #impl ", " #sym "@" #verid)
 #define	__sym_default(sym,impl,verid)	\
 	__asm__(".symver " #impl ", " #sym "@@@" #verid)
+#endif
+#else
+#ifdef __APPLE_CC__
+#define	__weak_reference(sym,alias)	\
+	__asm__(".weak_reference alias");		\
+	__asm__(".equ alias, sym")
 #else
 #define	__weak_reference(sym,alias)	\
 	__asm__(".weak alias");		\
 	__asm__(".equ alias, sym")
+#endif
 #define	__warn_references(sym,msg)	\
 	__asm__(".section .gnu.warning.sym"); \
 	__asm__(".asciz \"msg\"");	\
 	__asm__(".previous")
+#ifdef __APPLE_CC__
+#define	__sym_compat(sym,impl,verid)	\
+        __weak_reference(impl,sym@verid)
+#define	__sym_default(impl,sym,verid)	\
+        __weak_reference(impl,sym@verid)
+#else
 #define	__sym_compat(sym,impl,verid)	\
 	__asm__(".symver impl, sym@verid")
-#define	__sym_default(impl,sym,verid)	\
+#define	__sym_default(sym,impl,verid)	\
 	__asm__(".symver impl, sym@@@verid")
+#endif
 #endif	/* __STDC__ */
 #endif	/* __GNUC__ */
 

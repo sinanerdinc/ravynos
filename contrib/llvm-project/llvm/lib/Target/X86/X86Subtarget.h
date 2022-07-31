@@ -846,7 +846,7 @@ public:
 
   const Triple &getTargetTriple() const { return TargetTriple; }
 
-  bool isTargetDarwin() const { return TargetTriple.isOSDarwin(); }
+  bool isTargetDarwin() const { bool x = TargetTriple.isOSDarwin() || TargetTriple.isOSRavynOS(); printf("Target Triple isTargetDarwin? %d\n", x); return x; }
   bool isTargetFreeBSD() const { return TargetTriple.isOSFreeBSD(); }
   bool isTargetDragonFly() const { return TargetTriple.isOSDragonFly(); }
   bool isTargetSolaris() const { return TargetTriple.isOSSolaris(); }

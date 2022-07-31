@@ -55,6 +55,7 @@ SUBDIR+=	clang-format
 
 .if ${MK_LLD} != "no"
 SUBDIR+=	lld
+SUBDIR+=        ld64
 .endif
 .if ${MK_LLDB} != "no"
 SUBDIR+=	lldb

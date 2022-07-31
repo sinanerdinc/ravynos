@@ -38,13 +38,13 @@
 #define	__LIBC_COMPAT_H__
 
 #define	__sym_compat(sym, impl, verid)	\
-	.symver impl, sym@verid
+        .globl sym@verid; .weak_reference sym@verid; .equ sym@verid,impl
+	//.symver impl, sym@verid
 
 #ifndef NO_COMPAT7
 __sym_compat(__semctl, freebsd7___semctl, FBSD_1.0);
 __sym_compat(msgctl, freebsd7_msgctl, FBSD_1.0);
 __sym_compat(shmctl, freebsd7_shmctl, FBSD_1.0);
-#endif
 
 __sym_compat(nfstat, freebsd11_nfstat, FBSD_1.0);
 __sym_compat(nlstat, freebsd11_nlstat, FBSD_1.0);
@@ -72,9 +72,10 @@ __sym_compat(kevent, freebsd11_kevent, FBSD_1.0);
 __sym_compat(swapoff, freebsd13_swapoff, FBSD_1.0);
 
 #undef __sym_compat
+#endif
 
 #define	__weak_reference(sym,alias)	\
-	.weak	alias;.equ	alias,sym
+	.weak_reference	alias;.equ	alias,sym
 
 __weak_reference(__sys_fcntl, __fcntl_compat)
 
