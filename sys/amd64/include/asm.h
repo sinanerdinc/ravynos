@@ -45,7 +45,11 @@
 #include <sys/cdefs.h>
 
 #ifdef PIC
+#ifdef __APPLE_CC__
+#define PIC_PLT(x)      x
+#else
 #define	PIC_PLT(x)	x@PLT
+#endif
 #define	PIC_GOT(x)	x@GOTPCREL(%rip)
 #else
 #define	PIC_PLT(x)	x

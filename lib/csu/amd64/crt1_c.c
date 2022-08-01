@@ -59,6 +59,7 @@ _start(char **ap, void (*cleanup)(void))
 	if (&_DYNAMIC != NULL) {
 		atexit(cleanup);
 	} else {
+#ifndef __APPLE_CC__
 		process_irelocs();
 		_init_tls();
 	}
@@ -70,5 +71,8 @@ __asm__("eprol:");
 #endif
 
 	handle_static_init(argc, argv, env);
+#else
+        }
+#endif
 	exit(main(argc, argv, env));
 }

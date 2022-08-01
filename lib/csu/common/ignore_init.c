@@ -34,6 +34,7 @@ __FBSDID("$FreeBSD$");
 
 extern int main(int, char **, char **);
 
+#ifndef __APPLE_CC__
 extern void (*__preinit_array_start[])(int, char **, char **) __hidden;
 extern void (*__preinit_array_end[])(int, char **, char **) __hidden;
 extern void (*__init_array_start[])(int, char **, char **) __hidden;
@@ -42,10 +43,12 @@ extern void (*__fini_array_start[])(void) __hidden;
 extern void (*__fini_array_end[])(void) __hidden;
 extern void _fini(void) __hidden;
 extern void _init(void) __hidden;
+#endif
 
 extern int _DYNAMIC;
 #pragma weak _DYNAMIC
 
+#ifndef __APPLE_CC__
 #if defined(CRT_IRELOC_RELA)
 extern const Elf_Rela __rela_iplt_start[] __weak_symbol __hidden;
 extern const Elf_Rela __rela_iplt_end[] __weak_symbol __hidden;
@@ -78,12 +81,14 @@ process_irelocs(void)
 #else
 #error "Define platform reloc type"
 #endif
+#endif
 
 extern int *__argc;
 extern char ***__argv;
 char **environ;
 const char *__progname = "";
 
+#ifndef __APPLE_CC__
 static void
 finalizer(void)
 {
@@ -124,6 +129,7 @@ handle_static_init(int argc, char **argv, char **env)
 			fn(argc, argv, env);
 	}
 }
+#endif
 
 static inline void
 handle_argv(int argc, char *argv[], char **env)

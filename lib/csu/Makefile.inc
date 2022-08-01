@@ -1,5 +1,8 @@
 # $FreeBSD$
 
+LD=             ld64
+LDFLAGS+=       -arch x86_64 -platform_version macos 10.0 10.0
+
 NO_WMISSING_VARIABLE_DECLARATIONS=
 # Can't instrument these files since that breaks non-sanitized programs.
 MK_ASAN:=	no

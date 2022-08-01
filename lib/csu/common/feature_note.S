@@ -28,6 +28,7 @@
 #include <machine/asm.h>
 __FBSDID("$FreeBSD$");
 
+#ifndef __APPLE_CC__
 #include <sys/elf_common.h>
 #include "notes.h"
 
@@ -40,3 +41,5 @@ __FBSDID("$FreeBSD$");
 2:	.p2align	2
 3:	.4byte		0
 4:
+#endif
+

@@ -299,10 +299,18 @@ __FBSDID("$FreeBSD$");
 
 #ifndef MEMCPY
 ENTRY(memmove)
+#if __APPLE_CC__
+	MEMMOVE erms=0,overlap=1,begin=MEMMOVE_BEGIN,end=MEMMOVE_END
+#else
 	MEMMOVE erms=0 overlap=1 begin=MEMMOVE_BEGIN end=MEMMOVE_END
+#endif
 END(memmove)
 #else
 ENTRY(memcpy)
+#if __APPLE_CC__
+	MEMMOVE erms=0,overlap=1,begin=MEMMOVE_BEGIN,end=MEMMOVE_END
+#else
 	MEMMOVE erms=0 overlap=1 begin=MEMMOVE_BEGIN end=MEMMOVE_END
+#endif
 END(memcpy)
 #endif

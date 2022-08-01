@@ -38,6 +38,7 @@ __FBSDID("$FreeBSD$");
  * for more information.
  */
 
+#ifndef __APPLE_CC__
 	.section .note.tag,"aG",%note,.freebsd.noteG,comdat
 	.p2align	2
 	.4byte		2f-1f
@@ -47,3 +48,4 @@ __FBSDID("$FreeBSD$");
 2:	.p2align	2
 3:	.4byte		__FreeBSD_version
 4:
+#endif

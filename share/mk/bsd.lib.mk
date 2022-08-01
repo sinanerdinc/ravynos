@@ -76,6 +76,7 @@ TAG_ARGS=	-T ${TAGS:[*]:S/ /,/g}
 .endif
 
 # ELF hardening knobs
+.if 0
 .if ${MK_BIND_NOW} != "no"
 LDFLAGS+= -Wl,-znow
 .endif
@@ -93,6 +94,7 @@ CXXFLAGS+= -mretpoline
 LDFLAGS+= -Wl,-zretpolineplt
 .else
 .warning Retpoline requested but not supported by compiler or linker
+.endif
 .endif
 .endif
 
@@ -317,6 +319,7 @@ CLEANFILES+=	${SOBJS}
 .if defined(SHLIB_NAME)
 _LIBS+=		${SHLIB_NAME}
 
+.if 0
 SOLINKOPTS+=	-shared -Wl,-x
 .if defined(LD_FATAL_WARNINGS) && ${LD_FATAL_WARNINGS} == "no"
 SOLINKOPTS+=	-Wl,--no-fatal-warnings
@@ -324,6 +327,7 @@ SOLINKOPTS+=	-Wl,--no-fatal-warnings
 SOLINKOPTS+=	-Wl,--fatal-warnings
 .endif
 SOLINKOPTS+=	-Wl,--warn-shared-textrel
+.endif
 
 .if target(beforelinking)
 beforelinking: ${SOBJS}
@@ -350,8 +354,13 @@ ${SHLIB_NAME_FULL}: ${SOBJS}
 	# Note: This uses ln instead of ${INSTALL_LIBSYMLINK} since we are in OBJDIR
 	@${LN:Uln} -fs ${SHLIB_NAME} ${SHLIB_LINK}
 .endif
+.if 1
+	${_LD:N${CCACHE_BIN}} ${LDFLAGS} ${SSP_CFLAGS} ${SOLINKOPTS} \
+	    -o ${.TARGET} ${SOBJS} ${LDADD}
+.else
 	${_LD:N${CCACHE_BIN}} ${LDFLAGS} ${SSP_CFLAGS} ${SOLINKOPTS} \
 	    -o ${.TARGET} -Wl,-soname,${SONAME} ${SOBJS} ${LDADD}
+.endif
 .if ${MK_CTF} != "no"
 	${CTFMERGE} ${CTFFLAGS} -o ${.TARGET} ${SOBJS}
 .endif
