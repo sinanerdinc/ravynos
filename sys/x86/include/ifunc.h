@@ -31,6 +31,24 @@
 #ifndef __X86_IFUNC_H
 #define	__X86_IFUNC_H
 
+#ifdef __APPLE_CC__
+#define N_SYMBOL_RESOLVER(name)                                         \
+        __asm__(".symbol_resolver _" #name); 
+#define	DEFINE_IFUNC(qual, ret_type, name, args)			\
+    static ret_type (*name##_resolver(void))args __used;		\
+    qual ret_type name args;	                                        \
+    static ret_type (*name##_resolver(void))args
+#define	DEFINE_UIFUNC(qual, ret_type, name, args)			\
+    static ret_type (*name##_resolver(uint32_t, uint32_t, uint32_t,	\
+	uint32_t))args __used;						\
+    qual ret_type name args;   	                                        \
+    static ret_type (*name##_resolver(	        			\
+	uint32_t cpu_feature __unused,					\
+	uint32_t cpu_feature2 __unused,					\
+	uint32_t cpu_stdext_feature __unused,				\
+	uint32_t cpu_stdext_feature2 __unused))args
+#else
+#define N_SYMBOL_RESOLVER(name) 
 #define	DEFINE_IFUNC(qual, ret_type, name, args)			\
     static ret_type (*name##_resolver(void))args __used;		\
     qual ret_type name args __attribute__((ifunc(#name "_resolver")));	\
@@ -45,5 +63,6 @@
 	uint32_t cpu_feature2 __unused,					\
 	uint32_t cpu_stdext_feature __unused,				\
 	uint32_t cpu_stdext_feature2 __unused))args
+#endif
 
 #endif

@@ -78,4 +78,6 @@ ENTRY(strlen)
 	ret
 END(strlen)
 
+#ifndef __APPLE_CC__
 	.section .note.GNU-stack,"",%progbits
+#endif

@@ -73,4 +73,6 @@ ENTRY(strcmp)
 	ret
 END(strcmp)
 
+#ifndef __APPLE_CC__
 	.section .note.GNU-stack,"",%progbits
+#endif

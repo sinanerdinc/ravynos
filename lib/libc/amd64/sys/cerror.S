@@ -39,7 +39,9 @@ __FBSDID("$FreeBSD$");
 #include "SYS.h"
 
 	.globl HIDENAME(cerror)
+#ifndef __APPLE_CC__
 	.hidden HIDENAME(cerror)
+#endif
 
 	/*
 	 * The __error() function is thread aware. For non-threaded
@@ -47,7 +49,9 @@ __FBSDID("$FreeBSD$");
 	 * it returns a pointer to the global errno variable.
 	 */
 	.globl	CNAME(__error)
+#ifndef __APPLE_CC__
 	.type	CNAME(__error),@function
+#endif
 HIDENAME(cerror):
 	pushq	%rax
 	call	PIC_PLT(CNAME(__error))
@@ -57,4 +61,6 @@ HIDENAME(cerror):
 	movq	$-1,%rdx
 	ret
 
+#ifndef __APPLE_CC__
 	.section .note.GNU-stack,"",%progbits
+#endif

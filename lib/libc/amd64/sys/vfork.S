@@ -51,4 +51,6 @@ ENTRY(__sys_vfork)
 	jmp	HIDENAME(cerror)
 END(__sys_vfork)
 
+#ifndef __APPLE_CC__
 	.section .note.GNU-stack,"",%progbits
+#endif

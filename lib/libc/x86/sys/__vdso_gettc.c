@@ -182,13 +182,13 @@ tsc_selector_idx(u_int cpu_feature)
 	return (amd_cpu ? 1 : 0);
 }
 
-DEFINE_UIFUNC(static, u_int, __vdso_gettc_rdtsc_low,
+DEFINE_UIFUNC(, u_int, __vdso_gettc_rdtsc_low,
     (const struct vdso_timehands *th))
 {
 	return (tsc_selector[tsc_selector_idx(cpu_feature)].ts_rdtsc_low);
 }
 
-DEFINE_UIFUNC(static, u_int, __vdso_gettc_rdtsc32, (void))
+DEFINE_UIFUNC(, u_int, __vdso_gettc_rdtsc32, (void))
 {
 	return (tsc_selector[tsc_selector_idx(cpu_feature)].ts_rdtsc32);
 }

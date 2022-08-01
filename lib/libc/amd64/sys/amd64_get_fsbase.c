@@ -59,7 +59,7 @@ amd64_get_fsbase_syscall(void **addr)
 
 DEFINE_UIFUNC(, int, amd64_get_fsbase, (void **))
 {
-
+        N_SYMBOL_RESOLVER(amd64_get_fsbase);
 	if (__getosreldate() >= P_OSREL_WRFSBASE &&
 	    (cpu_stdext_feature & CPUID_STDEXT_FSGSBASE) != 0)
 		return (amd64_get_fsbase_cpu);

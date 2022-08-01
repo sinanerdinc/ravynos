@@ -49,6 +49,31 @@
 static void _mcount(uintfptr_t frompc, uintfptr_t selfpc) __used; \
 static void _mcount
 
+#ifdef __APPLE_CC__
+#define	MCOUNT __asm("			\n\
+	.text				\n\
+	.p2align 4,0x90			\n\
+	.globl	.mcount			\n\
+.mcount:				\n\
+	pushq	%rdi			\n\
+	pushq	%rsi			\n\
+	pushq	%rdx			\n\
+	pushq	%rcx			\n\
+	pushq	%r8			\n\
+	pushq	%r9			\n\
+	pushq	%rax			\n\
+	movq	8(%rbp),%rdi		\n\
+	movq	7*8(%rsp),%rsi		\n\
+	call	_mcount			\n\
+	popq	%rax			\n\
+	popq	%r9			\n\
+	popq	%r8			\n\
+	popq	%rcx			\n\
+	popq	%rdx			\n\
+	popq	%rsi			\n\
+	popq	%rdi			\n\
+	ret");
+#else
 #define	MCOUNT __asm("			\n\
 	.text				\n\
 	.p2align 4,0x90			\n\
@@ -74,6 +99,7 @@ static void _mcount
 	popq	%rdi			\n\
 	ret				\n\
 	.size	.mcount, . - .mcount");
+#endif
 #if 0
 /*
  * We could use this, except it doesn't preserve the registers that were

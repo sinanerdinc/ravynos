@@ -113,4 +113,6 @@ ENTRY(__siglongjmp)
 	ret
 END(__siglongjmp)
 
-	.section .note.GNU-stack,"",%progbits
+#ifndef __APPLE_CC__                                                                                                                              
+        .section .note.GNU-stack,"",%progbits                                                                                                     
+#endif                

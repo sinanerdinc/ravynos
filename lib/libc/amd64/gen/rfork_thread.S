@@ -92,4 +92,6 @@ ENTRY(rfork_thread)
 	jmp	HIDENAME(cerror)
 END(rfork_thread)
 
-	.section .note.GNU-stack,"",%progbits
+#ifndef __APPLE_CC__                                                                                                                              
+        .section .note.GNU-stack,"",%progbits                                                                                                     
+#endif                

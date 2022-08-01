@@ -39,9 +39,16 @@ ENTRY(fabs)
 	ret
 END(fabs)
 
+#ifdef __APPLE_CC__
+        .section __DATA,__data
+        .p2align 3
+#else
 	.section .rodata
 	.p2align 3
+#endif
 signbit:
 	.quad	0x8000000000000000
 
-	.section .note.GNU-stack,"",%progbits
+#ifndef __APPLE_CC__                                                                                                                              
+        .section .note.GNU-stack,"",%progbits                                                                                                     
+#endif                

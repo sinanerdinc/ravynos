@@ -17,4 +17,6 @@ ENTRY(div)
 	ret
 END(div)
 
+#ifndef __APPLE_CC__        
 	.section .note.GNU-stack,"",%progbits
+#endif

@@ -63,9 +63,14 @@
 
 #define _START_ENTRY	.text; .p2align 4,0x90
 
+#ifdef __APPLE_CC__
+#define _ENTRY(x)	_START_ENTRY; \
+			.globl CNAME(x); CNAME(x):;
+#else
 #define _ENTRY(x)	_START_ENTRY; \
 			.globl CNAME(x); .type CNAME(x),@function; CNAME(x):; \
 			.cfi_startproc
+#endif
 
 #ifdef PROF
 #define	ALTENTRY(x)	_ENTRY(x); \
@@ -93,16 +98,27 @@
 #define	ENTRY(x)	_ENTRY(x)
 #endif
 
+#ifdef __APPLE_CC__
+#define	END(x)
+#else
 #define	END(x)		.size x, . - x; .cfi_endproc
+#endif
+
 /*
  * WEAK_REFERENCE(): create a weak reference alias from sym. 
  * The macro is not a general asm macro that takes arbitrary names,
  * but one that takes only C names. It does the non-null name
  * translation inside the macro.
  */
+#ifdef __APPLE_CC__
+#define	WEAK_REFERENCE(sym, alias)					\
+	.weak_reference CNAME(alias);						\
+	.equ CNAME(alias),CNAME(sym)
+#else
 #define	WEAK_REFERENCE(sym, alias)					\
 	.weak CNAME(alias);						\
 	.equ CNAME(alias),CNAME(sym)
+#endif
 
 #define RCSID(x)	.text; .asciz x
 

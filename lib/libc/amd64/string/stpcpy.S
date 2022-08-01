@@ -113,4 +113,6 @@ __stpcpy:
 	ret
 END(stpcpy)
 	
+#ifndef __APPLE_CC__
 	.section .note.GNU-stack,"",%progbits
+#endif

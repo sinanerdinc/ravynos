@@ -15,4 +15,6 @@ ENTRY(ldiv)
 	ret
 END(ldiv)
 
+#ifndef __APPLE_CC__        
 	.section .note.GNU-stack,"",%progbits
+#endif

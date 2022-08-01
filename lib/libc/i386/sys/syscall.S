@@ -49,4 +49,6 @@ ENTRY(syscall)
 	ret
 END(syscall)
 
+#ifndef __APPLE_CC__
 	.section .note.GNU-stack,"",%progbits
+#endif

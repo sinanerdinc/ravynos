@@ -129,7 +129,8 @@ CLEANFILES+=	${SASM} ${SPSEUDO}
 
 .if ${MACHINE_CPUARCH} == "amd64" || ${MACHINE_CPUARCH} == "i386" || \
     ${MACHINE_CPUARCH} == "powerpc" || ${MACHINE_ARCH:Marmv[67]*}
-NOTE_GNU_STACK='\t.section .note.GNU-stack,"",%%progbits\n'
+//NOTE_GNU_STACK='\t.section .note.GNU-stack,"",%%progbits\n'
+NOTE_GNU_STACK=''
 .else
 NOTE_GNU_STACK=''
 .endif

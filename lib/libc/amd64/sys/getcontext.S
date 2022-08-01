@@ -45,4 +45,6 @@ ENTRY(__sys_getcontext)
 	jmp	*%rsi		/* restore return address */
 END(__sys_getcontext)
 
+#ifndef __APPLE_CC__
 	.section .note.GNU-stack,"",%progbits
+#endif

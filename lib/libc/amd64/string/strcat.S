@@ -165,4 +165,6 @@ ENTRY(strcat)
 	ret
 END(strcat)
 
+#ifndef __APPLE_CC__
 	.section .note.GNU-stack,"",%progbits
+#endif

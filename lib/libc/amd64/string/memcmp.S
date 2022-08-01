@@ -237,4 +237,6 @@ END(bcmp)
 END(memcmp)
 #endif
 
+#ifndef __APPLE_CC__
 	.section .note.GNU-stack,"",%progbits
+#endif

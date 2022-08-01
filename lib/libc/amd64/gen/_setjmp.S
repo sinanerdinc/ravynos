@@ -92,4 +92,6 @@ ENTRY(___longjmp)
 	ret
 END(___longjmp)
 
+#ifndef __APPLE_CC__
 	.section .note.GNU-stack,"",%progbits
+#endif

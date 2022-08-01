@@ -146,4 +146,6 @@ ENTRY(memset)
 	MEMSET erms=0
 END(memset)
 
+#ifndef __APPLE_CC__
 	.section .note.GNU-stack,"",%progbits
+#endif
