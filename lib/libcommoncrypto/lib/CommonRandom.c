@@ -25,6 +25,7 @@
 #include <CommonCrypto/CommonRandomSPI.h>
 #include "ccDispatch.h"
 #ifdef __RAVYNOS__
+#include <openssl/rand.h>
 #else
 #include <corecrypto/ccaes.h>
 #include <corecrypto/ccdrbg.h>
@@ -40,6 +41,7 @@ static const int ccRandomDefaultStruct;
 const CCRandomRef kCCRandomDefault = &ccRandomDefaultStruct;
 const CCRandomRef kCCRandomDevRandom = &ccRandomDefaultStruct;
 
+#ifndef __RAYNOS__
 /*
   We don't use /dev/random anymore, use the corecrypto rng instead.
 */
@@ -57,6 +59,7 @@ ccDevRandomGetRngState(void)
 {
     return ccDRBGGetRngState();
 }
+#endif
 
 int CCRandomCopyBytes(CCRandomRef rnd, void *bytes, size_t count)
 {

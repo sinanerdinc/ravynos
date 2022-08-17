@@ -24,7 +24,13 @@
 #ifndef CommonCrypto_corecryptoSymmetricBridge_h
 #define CommonCrypto_corecryptoSymmetricBridge_h
 
-#ifndef __RAVYNOS__
+#ifdef __RAVYNOS__
+
+#define CCERR_OK 0
+#define CCERR_PARAMETER 1
+#define cc_clear(x, y) memset(y, 0, x);
+
+#else
 
 #include <stdbool.h>
 #include <corecrypto/ccn.h>

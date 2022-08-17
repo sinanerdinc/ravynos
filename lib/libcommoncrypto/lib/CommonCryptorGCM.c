@@ -26,11 +26,6 @@
 #include <CommonCrypto/CommonCryptorSPI.h>
 #include "CommonCryptorPriv.h"
 #ifdef __RAVYNOS__
-
-#define CCERR_OK 0
-#define CCERR_PARAMETER 1
-#define cc_clear(x, y) memset(y, 0, x);
-
 #include <openssl/evp.h>
 
 static const EVP_CIPHER *gcm_cipher_mode(int keylen) {
@@ -41,7 +36,6 @@ static const EVP_CIPHER *gcm_cipher_mode(int keylen) {
         default: return NULL;
     }
 }
-
 #else
 #include <corecrypto/ccn.h>
 #endif
