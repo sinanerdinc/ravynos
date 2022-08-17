@@ -28,7 +28,6 @@
 #include "CommonDigestPriv.h"
 #include <CommonCrypto/CommonDigestSPI.h>
 #ifdef __RAVYNOS__
-#include <rvn_corecrypto.h>
 #else
 #include <corecrypto/cc.h>
 #include <corecrypto/cc_priv.h>

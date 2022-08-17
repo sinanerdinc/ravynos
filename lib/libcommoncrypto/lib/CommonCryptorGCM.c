@@ -91,7 +91,7 @@ CCCryptorGCMAddIV(CCCryptorRef cryptorRef,
     decl_cryptor();
     if(ivLen!=0 && iv==NULL) return kCCParamError;
 #ifdef __RAVYNOS__
-    int rc = (EVP_EncryptInit(cryptor->ctx[cryptor->op].gcm, NULL, NULL, iv) != 0);
+    int rc = (EVP_EncryptInit(cryptor->ctx[cryptor->op].gcm, NULL, NULL, iv) != 1);
 #else
     //it is okay to call with ivLen 0 and/OR iv==NULL
     //infact this needs to be done even with NULL values, otherwise ccgcm_ is going to return call sequence error.
@@ -112,7 +112,7 @@ CCCryptorGCMSetIV(CCCryptorRef cryptorRef,
     if(ivLen<AESGCM_MIN_IV_LEN || iv==NULL) return kCCParamError;
 
 #ifdef __RAVYNOS__
-    int rc = (EVP_EncryptInit(cryptor->ctx[cryptor->op].gcm, NULL, NULL, iv) != 0);
+    int rc = (EVP_EncryptInit(cryptor->ctx[cryptor->op].gcm, NULL, NULL, iv) != 1);
 #else
     int rc = ccgcm_set_iv(cryptor->symMode[cryptor->op].gcm,cryptor->ctx[cryptor->op].gcm, ivLen, iv);
 #endif
@@ -129,7 +129,7 @@ CCCryptorGCMAddAAD(CCCryptorRef cryptorRef,
     if(aDataLen!=0 && aData==NULL) return kCCParamError;
 #ifdef __RAVYNOS__
     int outlen = 0;
-    int rc = (EVP_EncryptUpdate(cryptor->ctx[cryptor->op].gcm, NULL, &outlen, aData, aDataLen) != 0);
+    int rc = (EVP_EncryptUpdate(cryptor->ctx[cryptor->op].gcm, NULL, &outlen, aData, aDataLen) != 1);
 #else
     //it is okay to call with aData zero
     int rc = ccgcm_aad(cryptor->symMode[cryptor->op].gcm,cryptor->ctx[cryptor->op].gcm, aDataLen, aData);
@@ -170,7 +170,7 @@ static CCCryptorStatus gcm_update(CCCryptorRef cryptorRef,
     if(dataOut == NULL) return kCCParamError;
 #ifdef __RAVYNOS__
     int outlen = 0;
-    int rc = (EVP_EncryptUpdate(cryptor->ctx[cryptor->op].gcm, dataOut, &outlen, dataIn, dataInLength) != 0);
+    int rc = (EVP_EncryptUpdate(cryptor->ctx[cryptor->op].gcm, dataOut, &outlen, dataIn, dataInLength) != 1);
 #else
     int rc = ccgcm_update(cryptor->symMode[cryptor->op].gcm,cryptor->ctx[cryptor->op].gcm, dataInLength, dataIn, dataOut);
 #endif
@@ -185,7 +185,7 @@ CCCryptorStatus CCCryptorGCMEncrypt(CCCryptorRef cryptorRef,
 #ifdef __RAVYNOS__
     int outlen = 0;
     decl_cryptor();
-    return (EVP_EncryptUpdate(cryptor->ctx[cryptor->op].gcm, dataOut, &outlen, dataIn, dataInLength) != 0);
+    return (EVP_EncryptUpdate(cryptor->ctx[cryptor->op].gcm, dataOut, &outlen, dataIn, dataInLength) != 1);
 #else
     return gcm_update(cryptorRef, dataIn, dataInLength, dataOut);
 #endif
@@ -200,7 +200,7 @@ CCCryptorStatus CCCryptorGCMDecrypt(CCCryptorRef cryptorRef,
 #ifdef __RAVYNOS__
     int outlen = 0;
     decl_cryptor();
-    return (EVP_DecryptUpdate(cryptor->ctx[cryptor->op].gcm, dataOut, &outlen, dataIn, dataInLength) != 0);
+    return (EVP_DecryptUpdate(cryptor->ctx[cryptor->op].gcm, dataOut, &outlen, dataIn, dataInLength) != 1);
 #else
     return gcm_update(cryptorRef, dataIn, dataInLength, dataOut);
 #endif
@@ -214,7 +214,7 @@ CCCryptorStatus CCCryptorGCMFinal(CCCryptorRef cryptorRef,
     if(tagOut == NULL || tagLength == NULL)  return kCCParamError;
 #ifdef __RAVYNOS__
     int len = 0;
-    int rc = (EVP_EncryptFinal(cryptor->ctx[cryptor->op].gcm, tagOut, &len) != 0) ? -1 : 0;
+    int rc = (EVP_EncryptFinal(cryptor->ctx[cryptor->op].gcm, tagOut, &len) != 1) ? -1 : 0;
     *tagLength = len;
 #else
     int rc = ccgcm_finalize(cryptor->symMode[cryptor->op].gcm,cryptor->ctx[cryptor->op].gcm, *tagLength, (void *) tagOut);
@@ -246,7 +246,7 @@ CCCryptorStatus CCCryptorGCMFinalize(CCCryptorRef cryptorRef,
     
 #ifdef __RAVYNOS__
     int len = 0;
-    int rc = (EVP_EncryptFinal(cryptor->ctx[cryptor->op].gcm, tag, &len) != 0);
+    int rc = (EVP_EncryptFinal(cryptor->ctx[cryptor->op].gcm, tag, &len) != 1);
     tagLength = len;
 #else
     int rc = ccgcm_finalize(cryptor->symMode[cryptor->op].gcm,cryptor->ctx[cryptor->op].gcm, tagLength, tag);
@@ -264,7 +264,7 @@ CCCryptorStatus CCCryptorGCMReset(CCCryptorRef cryptorRef)
 {
     decl_cryptor();
 #ifdef __RAVYNOS__
-    int rc = (EVP_CIPHER_CTX_reset(cryptor->ctx[cryptor->op].gcm) != 0);
+    int rc = (EVP_CIPHER_CTX_reset(cryptor->ctx[cryptor->op].gcm) != 1);
 #else
     int rc = ccgcm_reset(cryptor->symMode[cryptor->op].gcm,cryptor->ctx[cryptor->op].gcm);
 #endif
@@ -356,14 +356,14 @@ CCCryptorStatus CCCryptorGCMOneshotEncrypt(CCAlgorithm alg, const void  *key, si
 #ifdef __RAVYNOS__
     int rc = CCERR_OK;
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
-    if(EVP_EncryptInit(ctx, gcm_cipher_mode(keyLength), key, iv) != 0)
+    if(EVP_EncryptInit(ctx, gcm_cipher_mode(keyLength), key, iv) != 1)
         rc = CCERR_PARAMETER;
     
     int outlen = 0;
-    if(EVP_EncryptUpdate(ctx, dataOut, &outlen, dataIn, dataInLength) != 0)
+    if(EVP_EncryptUpdate(ctx, dataOut, &outlen, dataIn, dataInLength) != 1)
         rc = CCERR_PARAMETER;
 
-    if(EVP_EncryptUpdate(ctx, NULL, &outlen, aData, aDataLen) != 0)
+    if(EVP_EncryptUpdate(ctx, NULL, &outlen, aData, aDataLen) != 1)
         rc = CCERR_PARAMETER;
 
     EVP_EncryptFinal(ctx, tagOut, &outlen);
@@ -396,14 +396,16 @@ CCCryptorStatus CCCryptorGCMOneshotDecrypt(CCAlgorithm alg, const void  *key, si
 #ifdef __RAVYNOS__
     int rc = CCERR_OK;
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
-    if(EVP_DecryptInit(ctx, gcm_cipher_mode(keyLength), key, iv) != 0)
+    if(ctx == NULL)
+        return CCERR_PARAMETER;
+    if(EVP_DecryptInit(ctx, gcm_cipher_mode(keyLength), key, iv) != 1)
         rc = CCERR_PARAMETER;
     
     int outlen = 0;
-    if(EVP_DecryptUpdate(ctx, dataOut, &outlen, dataIn, dataInLength) != 0)
+    if(EVP_DecryptUpdate(ctx, dataOut, &outlen, dataIn, dataInLength) != 1)
         rc = CCERR_PARAMETER;
 
-    if(EVP_DecryptUpdate(ctx, NULL, &outlen, aData, aDataLen) != 0)
+    if(EVP_DecryptUpdate(ctx, NULL, &outlen, aData, aDataLen) != 1)
         rc = CCERR_PARAMETER;
 
     outlen = tagLength;

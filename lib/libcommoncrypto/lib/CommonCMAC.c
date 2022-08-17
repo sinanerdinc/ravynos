@@ -112,7 +112,7 @@ CCAESCmacCreate(const void *key, size_t keyLength)
     // Initialization (key length check)
     if (key==NULL
 #ifdef __RAVYNOS__
-        || CMAC_Init(retval->ctxptr, key, keyLength, EVP_aes_128_cbc(), NULL) != 0) {
+        || CMAC_Init(retval->ctxptr, key, keyLength, EVP_aes_128_cbc(), NULL) != 1) {
         CMAC_CTX_free(retval->ctxptr);
 #else
         || cccmac_init(cbc, retval->ctxptr,

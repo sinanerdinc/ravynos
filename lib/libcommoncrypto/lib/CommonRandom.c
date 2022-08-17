@@ -71,7 +71,9 @@ int CCRandomCopyBytes(CCRandomRef rnd, void *bytes, size_t count)
 CCRNGStatus CCRandomGenerateBytes(void *bytes, size_t count)
 {
     int err;
+#ifndef __RAVYNOS__
     struct ccrng_state *rng;
+#endif
 
     if (0 == count) {
         return kCCSuccess;
@@ -81,8 +83,12 @@ CCRNGStatus CCRandomGenerateBytes(void *bytes, size_t count)
         return kCCParamError;
     }
 
+#ifdef __RAVYNOS__
+    err = (RAND_bytes((unsigned char *)bytes, count) != 1);
+#else
     rng = ccDRBGGetRngState();
     err = ccrng_generate(rng, count, bytes);
+#endif
     if (err == CCERR_OK) {
         return kCCSuccess;
     }
@@ -93,10 +99,17 @@ CCRNGStatus CCRandomGenerateBytes(void *bytes, size_t count)
 CCRNGStatus CCRandomUniform(uint64_t bound, uint64_t *rand)
 {
     int err;
+
+#ifdef __RAVYNOS__
+    do
+        err = (RAND_bytes(rand, 8) != 1);
+    while(*rand >= bound);
+#else
     struct ccrng_state *rng;
 
     rng = ccDRBGGetRngState();
     err = ccrng_uniform(rng, bound, rand);
+#endif
     if (err == CCERR_OK) {
         return kCCSuccess;
     }
