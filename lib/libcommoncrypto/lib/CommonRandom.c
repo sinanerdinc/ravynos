@@ -100,10 +100,12 @@ CCRNGStatus CCRandomUniform(uint64_t bound, uint64_t *rand)
 {
     int err;
 
+    if(bound == 0)
+        return kCCRNGFailure;
+
 #ifdef __RAVYNOS__
-    do
-        err = (RAND_bytes(rand, 8) != 1);
-    while(*rand >= bound);
+    err = (RAND_bytes(rand, 8) != 1);
+    *rand = *rand % bound;
 #else
     struct ccrng_state *rng;
 

@@ -34,7 +34,9 @@
 #include <os/assumes.h>
 #endif
 
-#ifndef __RAVYNOS__
+#ifdef __RAVYNOS__
+#include <openssl/evp.h>
+#else
 #include <corecrypto/ccdh.h>
 #include <corecrypto/ccdigest.h>
 #endif
@@ -64,7 +66,11 @@
 struct cc_globals_s {
     crcInfo crcSelectionTab[CN_SUPPORTED_CRCS]; // CommonCRC.c
     BaseEncoderFrame encoderTab[CN_STANDARD_BASE_ENCODERS];
+#ifdef __RAVYNOS__
+	const EVP_MD *digest_info[CC_MAX_N_DIGESTS];// CommonDigest.c
+#else
 	const struct ccdigest_info *digest_info[CC_MAX_N_DIGESTS];// CommonDigest.c
+#endif
 };
 
 typedef struct cc_globals_s *cc_globals_t;

@@ -27,7 +27,17 @@
 
 #include "ccGlobals.h"
 #ifdef __RAVYNOS__
-#include <rvn_corecrypto.h>
+#include <openssl/evp.h>
+
+const struct ccdigest_info ccmd2_di;
+const struct ccdigest_info ccmd4_di;
+const struct ccdigest_info ccmd5_di;
+const struct ccdigest_info ccrmd160_di;
+const struct ccdigest_info ccsha1_di;
+const struct ccdigest_info ccsha224_di;
+const struct ccdigest_info ccsha256_di;
+const struct ccdigest_info ccsha384_di;
+const struct ccdigest_info ccsha512_di;
 #else
 #include <corecrypto/ccmd2.h>
 #include <corecrypto/ccmd4.h>
@@ -56,15 +66,48 @@ static void init_globals_digest(void *g){
     memset(globals->digest_info, 0, sizeof (globals->digest_info));
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#ifdef __RAVYNOS__
+    ccmd2_di.digest = EVP_md2();
+    ccmd4_di.digest = EVP_md4();
+    ccmd5_di.digest = EVP_md5();
+    ccrmd160_di.digest = EVP_ripemd160();
+    ccsha1_di.digest = EVP_sha1();
+    ccsha224_di.digest = EVP_sha224();
+    ccsha256_di.digest = EVP_sha256();
+    ccsha384_di.digest = EVP_sha384();
+    ccsha512_di.digest = EVP_sha512();
+#endif
     globals->digest_info[kCCDigestMD2] = &ccmd2_di;
     globals->digest_info[kCCDigestMD4] = &ccmd4_di;
+#ifdef __RAVYNOS__
+    globals->digest_info[kCCDigestMD5] = &ccmd5_di;
+#else
     globals->digest_info[kCCDigestMD5] = ccmd5_di();
+#endif
     globals->digest_info[kCCDigestRMD160] = &ccrmd160_di;
+#ifdef __RAVYNOS__
+    globals->digest_info[kCCDigestSHA1] = &ccsha1_di;
+    globals->digest_info[kCCDigestSHA224] = &ccsha224_di;
+    globals->digest_info[kCCDigestSHA256] = &ccsha256_di;
+    globals->digest_info[kCCDigestSHA384] = &ccsha384_di;
+    globals->digest_info[kCCDigestSHA512] = &ccsha512_di;
+
+    for(int i = 0; i < CC_MAX_N_DIGESTS; ++i) {
+        memset(globals->digest_info[i].oid, 0, sizeof(globals->digest_info[i].oid));
+        OBJ_obj2txt(globals->digest_info[i].oid,
+            sizeof(globals->digest_info[i].oid),
+            OBJ_nid2obj(EVP_MD_get_type(globals->digest_info[i].digest)), 0);
+        globals->digest_info[i].oid_size = strlen(globals->digest_info[i].oid);
+        globals->digest_info[i].block_size = EVP_MD_get_block_size(globals->digest_info[i].digest);
+        globals->digest_info[i].output_size = EVP_MD_get_size(globals->digest_info[i].digest);
+    }
+#else
     globals->digest_info[kCCDigestSHA1] = ccsha1_di();
     globals->digest_info[kCCDigestSHA224] = ccsha224_di();
     globals->digest_info[kCCDigestSHA256] = ccsha256_di();
     globals->digest_info[kCCDigestSHA384] = ccsha384_di();
     globals->digest_info[kCCDigestSHA512] = ccsha512_di();
+#endif
 #pragma clang diagnostic pop
 }
 

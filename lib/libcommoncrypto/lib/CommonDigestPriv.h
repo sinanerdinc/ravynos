@@ -30,11 +30,26 @@
 
 #include <CommonCrypto/CommonDigest.h>
 #include <CommonCrypto/CommonDigestSPI.h>
+#ifdef __RAVYNOS__
+#include <openssl/evp.h>
+
+struct ccdigest_info {
+    EVP_MD *digest;
+    uint8_t oid[128];
+    size_t oid_size;
+    size_t block_size;
+    size_t output_size;
+};
+#endif
 
 // This has to fit in 1032 bytes for static context clients - until we move them.
 typedef struct ccDigest_s {
     const struct ccdigest_info *di;
+#ifdef __RAVYNOS__
+    EVP_MD_CTX *md;
+#else
     uint8_t            md[512];
+#endif
 } CCDigestCtx_t, *CCDigestCtxPtr;
 
 

@@ -28,6 +28,7 @@
 #include "CommonDigestPriv.h"
 #include <CommonCrypto/CommonDigestSPI.h>
 #ifdef __RAVYNOS__
+#include <openssl/evp.h>
 #else
 #include <corecrypto/cc.h>
 #include <corecrypto/cc_priv.h>
@@ -75,7 +76,12 @@ CCDigestInit(CCDigestAlgorithm alg, CCDigestRef c)
     CCDigestCtxPtr p = (CCDigestCtxPtr) c;
 
     if((p->di = CCDigestGetDigestInfo(alg)) != NULL) {
+#ifdef __RAVYNOS__
+        p->md = EVP_MD_CTX_new();
+        EVP_DigestInit_ex(p->md, p->di, NULL);
+#else
         ccdigest_init(p->di, (struct ccdigest_ctx *) p->md);
+#endif
 		return 0;
     } else {
         return kCCUnimplemented;
@@ -91,7 +97,11 @@ CCDigestUpdate(CCDigestRef c, const void *data, size_t len)
     if(data == NULL) return kCCParamError; /* this is only a problem if len > 0 */
     CCDigestCtxPtr p = (CCDigestCtxPtr) c;
     if(p->di) {
+#ifdef __RAVYNOS__
+        EVP_DigestUpdate(p->md, data, len);
+#else
         ccdigest_update(p->di, (struct ccdigest_ctx *) p->md, len, data);
+#endif
         return kCCSuccess;
     }
     return kCCUnimplemented;
@@ -104,7 +114,13 @@ CCDigestFinal(CCDigestRef c, uint8_t *out)
 	if(c == NULL || out == NULL) return kCCParamError;
 	CCDigestCtxPtr p = (CCDigestCtxPtr) c;
     if(p->di) {
+#ifdef __RAVYNOS__
+        int len = 0;
+        EVP_DigestFinal_ex(p->md, out, &len);
+        EVP_MD_CTX_free(p->md);
+#else
         ccdigest_final(p->di, (struct ccdigest_ctx *) p->md, out);
+#endif
         return 0;
     }
     return kCCUnimplemented;
@@ -125,7 +141,16 @@ CCDigest(CCDigestAlgorithm alg, const uint8_t *data, size_t len, uint8_t *out)
         /* this is only a problem if len != 0 */
         return kCCParamError;
     }
+#ifdef __RAVYNOS__
+    EVP_MD_CTX *ctx = EVP_MD_CTX_new();
+    EVP_DigestInit(ctx, di->digest);
+    EVP_DigestUpdate(ctx, data, len);
+    int outlen = 0;
+    EVP_DigestFinal(ctx, out, &outlen);
+    EVP_MD_CTX_free(ctx);
+#else
     ccdigest(di, len, data, out);
+#endif
     return 0;
 }
 
@@ -231,7 +256,11 @@ CCDigestReset(CCDigestRef ctx)
 {
     CC_DEBUG_LOG("Entering\n");
     CCDigestCtxPtr p = (CCDigestCtxPtr) ctx;
+#ifdef __RAVYNOS__
+    if(p->md) EVP_MD_CTX_reset(p->md);
+#else
     if(p->di) ccdigest_init(p->di, (struct ccdigest_ctx *) p->md);
+#endif
 }
 
 
@@ -250,6 +279,7 @@ CCDigestDestroy(CCDigestRef ctx)
 
 #define CC_COMPAT_DIGEST_RETURN 1
 
+#ifndef __RAVYNOS__
 // corecrypto to CommonCrypto
 #define CC_ccToCC_DIGEST_CTX(di,cc_c,CC_c)                                \
     memcpy((uint8_t*)CC_c, ccdigest_state_u8(di, cc_c), di->state_size); \
@@ -263,7 +293,6 @@ CCDigestDestroy(CCDigestRef ctx)
     memcpy(ccdigest_data(di, cc_c), &CC_c->data[0], di->block_size);  \
     memcpy(&ccdigest_nbits(di, cc_c), &CC_c->Nl, 2*sizeof(CC_c->Nl)); \
     ccdigest_num(di, cc_c)=CC_c->num;
-
 
 #define DIGEST_SHIMS(_name_,_constant_) \
 \
@@ -329,7 +358,7 @@ DIGEST_FINAL_SHIMS(SHA224, kCCDigestSHA224)
 DIGEST_FINAL_SHIMS(SHA256, kCCDigestSHA256)
 DIGEST_FINAL_SHIMS(SHA384, kCCDigestSHA384)
 DIGEST_FINAL_SHIMS(SHA512, kCCDigestSHA512)
-
+#endif
 
 
 #define MD5_CTX                     CC_MD5_CTX
