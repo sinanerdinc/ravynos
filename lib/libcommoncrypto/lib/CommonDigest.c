@@ -358,7 +358,7 @@ DIGEST_FINAL_SHIMS(SHA224, kCCDigestSHA224)
 DIGEST_FINAL_SHIMS(SHA256, kCCDigestSHA256)
 DIGEST_FINAL_SHIMS(SHA384, kCCDigestSHA384)
 DIGEST_FINAL_SHIMS(SHA512, kCCDigestSHA512)
-#endif
+#endif // __RAVYNOS__
 
 
 #define MD5_CTX                     CC_MD5_CTX
@@ -368,10 +368,19 @@ void MD5Final(unsigned char md[16], MD5_CTX *c)
     (void) CC_MD5_Final(md, c);
 }
 
+#ifdef __RAVYNOS__
+typedef EVP_MD_CTX * ccdigest_state_t;
+#endif
+
 static void
 ccdigest_process(const struct ccdigest_info *di, uint8_t *bufptr, ccdigest_state_t state,
                  size_t curlen, size_t len, const uint8_t *data)
 {
+#ifdef __RAVYNOS__
+    if(!state)
+        return;
+    EVP_DigestUpdate(state, data, len);
+#else
     while(len) { 
         if (curlen == 0 && len >= di->block_size) {
             uint64_t fullblocks = len / di->block_size;
@@ -388,12 +397,19 @@ ccdigest_process(const struct ccdigest_info *di, uint8_t *bufptr, ccdigest_state
             }
         } 
     }
+#endif
 }
 
 static void
 ccdigest_finalize(const struct ccdigest_info *di, uint8_t *bufptr, ccdigest_state_t state,
                   size_t curlen, uint64_t totalLen)
 {
+#ifdef __RAVYNOS__
+    if(!state)
+        return;
+    int len = 0;
+    EVP_DigestFinal(state, bufptr, &len);
+#else
     bufptr[curlen++] = (unsigned char)0x80;
     int reserve = 8;
     if(di->block_size == 128) reserve = 16; // SHA384/512 reserves 16 bytes below.
@@ -414,6 +430,7 @@ ccdigest_finalize(const struct ccdigest_info *di, uint8_t *bufptr, ccdigest_stat
     totalLen *= 8; // size in bits
     CC_STORE64_BE(totalLen, bufptr+(di->block_size - 8));
     di->compress(state, 1, bufptr);
+#endif
 }
 
 /*
@@ -431,6 +448,7 @@ ccdigest_finalize(const struct ccdigest_info *di, uint8_t *bufptr, ccdigest_stat
  } CC_MD2_CTX;
  */
 
+#ifndef __RAVYNOS__
 static inline void md2in(const struct ccdigest_info *di, ccdigest_ctx_t ctx, CC_MD2_CTX *c)
 {
     memcpy(ccdigest_state_u8(di, ctx)+48, c->cksm, CC_MD2_BLOCK_LONG);
@@ -446,33 +464,48 @@ static inline void md2out(const struct ccdigest_info *di, CC_MD2_CTX *c, ccdiges
     memcpy(c->data, ccdigest_data(di, ctx), CC_MD2_DIGEST_LENGTH);
     c->num = (int) ccdigest_num(di, ctx);
 }
+#endif
 
 int CC_MD2_Init(CC_MD2_CTX *c)
 {
     const struct ccdigest_info *di = CCDigestGetDigestInfo(kCCDigestMD2);
+#ifdef __RAVYNOS__
+    *c = EVP_MD_CTX_new();
+    EVP_DigestInit(*c, di->digest);
+#else
     ccdigest_di_decl(di, ctx);
     ccdigest_init(di, ctx);
     md2out(di, c, ctx);
+#endif
     return CC_COMPAT_DIGEST_RETURN;
 }
 
 int CC_MD2_Update(CC_MD2_CTX *c, const void *data, CC_LONG len)
 {
     const struct ccdigest_info *di = CCDigestGetDigestInfo(kCCDigestMD2);
+#ifdef __RAVYNOS__
+    EVP_DigestUpdate(*c, data, len);
+#else
     ccdigest_di_decl(di, ctx);
     md2in(di, ctx, c);
     ccdigest_update(di, ctx, len, data);
     md2out(di, c, ctx);
+#endif
     return CC_COMPAT_DIGEST_RETURN;
 }
 
 int CC_MD2_Final(unsigned char *md, CC_MD2_CTX *c)
 {
     const struct ccdigest_info *di = CCDigestGetDigestInfo(kCCDigestMD2);
+#ifdef __RAVYNOS__
+    int len = 0;
+    EVP_DigestUpdate(*c, md, &len);
+#else
     ccdigest_di_decl(di, ctx);
     md2in(di, ctx, c);
     ccdigest_final(di, ctx, md);
     md2out(di, c, ctx);
+#endif
     return CC_COMPAT_DIGEST_RETURN;
 }
 

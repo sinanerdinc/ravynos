@@ -35,6 +35,9 @@
 #else
 #include <os/availability.h>
 #endif
+#ifdef __RAVYNOS__
+#include <openssl/evp.h>
+#endif
 
 
 #ifdef __cplusplus
@@ -69,6 +72,9 @@ typedef uint64_t CC_LONG64;     /* 64 bit unsigned integer */
 #define CC_MD2_BLOCK_BYTES      64          /* block size in bytes */
 #define CC_MD2_BLOCK_LONG       (CC_MD2_BLOCK_BYTES / sizeof(CC_LONG))
 
+#ifdef __RAVYNOS__
+typedef EVP_MD_CTX *CC_MD2_CTX;
+#else
 typedef struct CC_MD2state_st
 {
     int num;
@@ -76,6 +82,7 @@ typedef struct CC_MD2state_st
     CC_LONG cksm[CC_MD2_BLOCK_LONG];
     CC_LONG state[CC_MD2_BLOCK_LONG];
 } CC_MD2_CTX;
+#endif
 
 extern int CC_MD2_Init(CC_MD2_CTX *c)
 API_DEPRECATED(CC_DIGEST_DEPRECATION_WARNING, macos(10.4, 10.15), ios(2.0, 13.0));
@@ -95,6 +102,9 @@ API_DEPRECATED(CC_DIGEST_DEPRECATION_WARNING, macos(10.4, 10.15), ios(2.0, 13.0)
 #define CC_MD4_BLOCK_BYTES      64          /* block size in bytes */
 #define CC_MD4_BLOCK_LONG       (CC_MD4_BLOCK_BYTES / sizeof(CC_LONG))
 
+#ifdef __RAVYNOS__
+typedef EVP_MD_CTX *CC_MD4_CTX;
+#else
 typedef struct CC_MD4state_st
 {
     CC_LONG A,B,C,D;
@@ -102,6 +112,7 @@ typedef struct CC_MD4state_st
     CC_LONG data[CC_MD4_BLOCK_LONG];
     uint32_t num;
 } CC_MD4_CTX;
+#endif
 
 extern int CC_MD4_Init(CC_MD4_CTX *c)
 API_DEPRECATED(CC_DIGEST_DEPRECATION_WARNING, macos(10.4, 10.15), ios(2.0, 13.0));
@@ -122,6 +133,9 @@ API_DEPRECATED(CC_DIGEST_DEPRECATION_WARNING, macos(10.4, 10.15), ios(2.0, 13.0)
 #define CC_MD5_BLOCK_BYTES      64          /* block size in bytes */
 #define CC_MD5_BLOCK_LONG       (CC_MD5_BLOCK_BYTES / sizeof(CC_LONG))
 
+#ifdef __RAVYNOS__
+typedef EVP_MD_CTX *CC_MD5_CTX;
+#else
 typedef struct CC_MD5state_st
 {
     CC_LONG A,B,C,D;
@@ -129,6 +143,7 @@ typedef struct CC_MD5state_st
     CC_LONG data[CC_MD5_BLOCK_LONG];
     int num;
 } CC_MD5_CTX;
+#endif
 
 extern int CC_MD5_Init(CC_MD5_CTX *c)
 API_DEPRECATED(CC_DIGEST_DEPRECATION_WARNING, macos(10.4, 10.15), ios(2.0, 13.0));
@@ -148,6 +163,9 @@ API_DEPRECATED(CC_DIGEST_DEPRECATION_WARNING, macos(10.4, 10.15), ios(2.0, 13.0)
 #define CC_SHA1_BLOCK_BYTES     64          /* block size in bytes */
 #define CC_SHA1_BLOCK_LONG      (CC_SHA1_BLOCK_BYTES / sizeof(CC_LONG))
 
+#ifdef __RAVYNOS__
+typedef EVP_MD_CTX *CC_SHA1_CTX;
+#else
 typedef struct CC_SHA1state_st
 {
     CC_LONG h0,h1,h2,h3,h4;
@@ -155,6 +173,7 @@ typedef struct CC_SHA1state_st
     CC_LONG data[CC_SHA1_BLOCK_LONG];
     int num;
 } CC_SHA1_CTX;
+#endif
 
 extern int CC_SHA1_Init(CC_SHA1_CTX *c);
 
@@ -169,11 +188,15 @@ extern unsigned char *CC_SHA1(const void *data, CC_LONG len, unsigned char *md);
 #define CC_SHA224_BLOCK_BYTES       64          /* block size in bytes */
 
 /* same context struct is used for SHA224 and SHA256 */
+#ifdef __RAVYNOS__
+typedef EVP_MD_CTX *CC_SHA256_CTX;
+#else
 typedef struct CC_SHA256state_st
 {   CC_LONG count[2];
     CC_LONG hash[8];
     CC_LONG wbuf[16];
 } CC_SHA256_CTX;
+#endif
 
 extern int CC_SHA224_Init(CC_SHA256_CTX *c)
 API_AVAILABLE(macos(10.4), ios(2.0));
@@ -212,11 +235,15 @@ API_AVAILABLE(macos(10.4), ios(2.0));
 #define CC_SHA384_BLOCK_BYTES      128          /* block size in bytes */
 
 /* same context struct is used for SHA384 and SHA512 */
+#ifdef __RAVYNOS__
+typedef EVP_MD_CTX *CC_SHA512_CTX;
+#else
 typedef struct CC_SHA512state_st
 {   CC_LONG64 count[2];
     CC_LONG64 hash[8];
     CC_LONG64 wbuf[16];
 } CC_SHA512_CTX;
+#endif
 
 extern int CC_SHA384_Init(CC_SHA512_CTX *c)
 API_AVAILABLE(macos(10.4), ios(2.0));
