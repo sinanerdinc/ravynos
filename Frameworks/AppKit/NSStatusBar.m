@@ -1,4 +1,5 @@
 /* Copyright (c) 2006-2007 Christopher J. W. Lloyd
+   Copyright (c) 2022 Zoe Knox <zoe@pixin.net>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -36,32 +37,13 @@ static NSStatusBar *_statusBar=nil;
 }
 
 - (BOOL)isVertical{
-#ifdef WIN32
-    HWND       hTaskbar = FindWindow( "Shell_TrayWnd", NULL );
-    
-    APPBARDATA abd;
-    RECT taskBarRect = {0};
-    abd.rc = taskBarRect;
-    abd.cbSize = sizeof(APPBARDATA);
-    abd.hWnd = hTaskbar;
-    
-    SHAppBarMessage(ABM_GETTASKBARPOS, &abd);
-    
-    UINT uEdge = abd.uEdge;
-    
-    if(uEdge == ABE_LEFT || uEdge == ABE_RIGHT){
-        //Vertical
-        return YES;
-    }else {
-        //Horizontal
-        return NO;
-    }
-#endif
-    return NO;
+    return NO; // menuBar cannot be vertical
 }
+
 - (void)removeStatusItem:(NSStatusItem *)item{
     
 }
+
 - (NSStatusItem *)statusItemWithLength:(CGFloat)length{
     NSStatusItem *item = [[NSStatusItem alloc] init];
     [item setLength:length];
@@ -69,22 +51,7 @@ static NSStatusBar *_statusBar=nil;
     return [item autorelease];
 }
 - (CGFloat)thickness{
-#ifdef WIN32
-    HWND hWnd = FindWindow("Shell_TrayWnd","");
-    if(hWnd != NULL){
-        RECT rect;
-        GetWindowRect(hWnd, &rect);
-        if([self isVertical]){
-            return rect.right - rect.left;
-        }else {
-            return rect.bottom - rect.top;
-        }
-    }else {
-        //Fall back to Windows XP's default taskbar height
-        return 30;
-    }
-#endif
-    return 42;
+    return 22; // keep this in sync with menuBarHeight in SystemUIServer/desktop.h
 }
 
 #ifdef WIN32

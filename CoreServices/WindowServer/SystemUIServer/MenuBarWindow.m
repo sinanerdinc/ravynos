@@ -132,6 +132,10 @@ extern pthread_mutex_t mtx;
     [menuView addRecentItem:itemURL];
 }
 
+- (void)updateStatusItems:(NSArray *)items forPID:(unsigned int)pid {
+	[extrasView updateStatusItems:items forPID:pid];
+}
+
 // intercept these - we don't want this app to become activated or deactivated
 -(void)platformWindowActivated:(CGWindow *)window displayIfNeeded:(BOOL)displayIfNeeded {
     // do nothing

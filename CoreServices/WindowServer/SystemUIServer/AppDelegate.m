@@ -205,7 +205,7 @@ typedef union {
         if([item isSeparatorItem] || [item isHidden] || ![item isEnabled])
             continue;
         [item setTarget:self];
-        [item setAction:@selector(dump:)];
+        [item setAction:@selector(proxyClick:)];
         if([item hasSubmenu])
             [self _menuEnumerateAndChange:[item submenu]];
     }
@@ -227,7 +227,20 @@ typedef union {
     kevent(_kq, kev, 1, NULL, 0, NULL);
 }
 
-- (void)dump:(NSMenuItem *)object {
+- (void)statusItemsDidUpdate:(NSNotification *)note {
+    NSMutableDictionary *dict = (NSMutableDictionary *)[note userInfo];
+    pid_t pid = [[dict objectForKey:@"ProcessID"] intValue];
+    NSArray *statusItems = [dict objectForKey:@"StatusItems"];
+	NSLog(@"statusItemsDidUpdate! %@", statusItems);
+    [menuBar updateStatusItems:statusItems forPID:pid];
+
+    // watch for this PID to exit
+    struct kevent kev[1];
+    EV_SET(kev, pid, EVFILT_PROC, EV_ADD|EV_ONESHOT, NOTE_EXIT, 0, NULL);
+    kevent(_kq, kev, 1, NULL, 0, NULL);
+}
+
+- (void)proxyClick:(NSMenuItem *)object {
     int itemID = [object tag];
 
     Message clicked = {0};

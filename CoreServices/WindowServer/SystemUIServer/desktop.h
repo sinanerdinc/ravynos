@@ -81,6 +81,8 @@ extern const NSString *WLMenuDidUpdateNotification;
 // menu extras container
 @interface ExtrasView: NSView {
 }
+
+- (void)updateStatusItems:(NSArray *)items forPID:(unsigned int)pid;
 @end
 
 // the global top bar
@@ -106,6 +108,7 @@ extern const NSString *WLMenuDidUpdateNotification;
 - (void)addRecentItem:(NSURL *)itemURL;
 - (mach_port_t)activePort;
 - (int)activeProcessID;
+- (void)updateStatusItems:(NSArray *)items forPID:(unsigned int)pid;
 @end
 
 // desktop interface controller

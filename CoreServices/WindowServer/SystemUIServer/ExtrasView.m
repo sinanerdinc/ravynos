@@ -24,5 +24,10 @@
 #import "desktop.h"
 
 @implementation ExtrasView
+
+- (void)updateStatusItems:(NSArray *)items forPID:(unsigned int)pid {
+	NSLog(@"%@ updateStatusItems", self);
+}
+
 @end
 

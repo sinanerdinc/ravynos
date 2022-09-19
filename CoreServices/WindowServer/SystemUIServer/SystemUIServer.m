@@ -38,6 +38,7 @@
 
 const NSString *WLOutputDidResizeNotification = @"WLOutputDidResizeNotification";
 const NSString *WLMenuDidUpdateNotification = @"WLMenuDidUpdateNotification";
+const NSString *WLStatusItemsDidUpdateNotification = @"WLStatusItemsDidUpdateNotification";
 
 void menuListener(void *arg __unused) {
     int conn;
@@ -83,22 +84,41 @@ void menuListener(void *arg __unused) {
             NSLog(@"%@",localException);
         }
 
-        if(o == nil || [o isKindOfClass:[NSDictionary class]] == NO ||
-            [(NSDictionary *)o objectForKey:@"MainMenu"] == nil ||
-            ![[(NSDictionary *)o objectForKey:@"MainMenu"] isKindOfClass:[NSMenu class]]) {
+        if(o == nil || [o isKindOfClass:[NSDictionary class]] == NO) {
             fprintf(stderr, "archiver: bad input\n");
             continue;
+		}
+
+
+		// is there a menu?
+        if([(NSDictionary *)o objectForKey:@"MainMenu"] != nil &&
+            [[(NSDictionary *)o objectForKey:@"MainMenu"] isKindOfClass:[NSMenu class]])
+		{
+			NSMutableDictionary *md = [NSMutableDictionary new];
+			[md setDictionary:(NSDictionary *)o];
+			[md setObject:[NSNumber numberWithInt:xucred.cr_pid] forKey:@"ProcessID"];
+			[md setObject:[NSNumber numberWithInt:xucred.cr_uid] forKey:@"UserID"];
+			[md setObject:[NSNumber numberWithInt:xucred.cr_gid] forKey:@"GroupID"];
+        
+			[[NSNotificationCenter defaultCenter] 
+				postNotificationName:WLMenuDidUpdateNotification object:nil
+				userInfo:md];
         }
 
-        NSMutableDictionary *md = [NSMutableDictionary new];
-        [md setDictionary:(NSDictionary *)o];
-        [md setObject:[NSNumber numberWithInt:xucred.cr_pid] forKey:@"ProcessID"];
-        [md setObject:[NSNumber numberWithInt:xucred.cr_uid] forKey:@"UserID"];
-        [md setObject:[NSNumber numberWithInt:xucred.cr_gid] forKey:@"GroupID"];
+		// is there a status item list?
+        if([(NSDictionary *)o objectForKey:@"StatusItems"] != nil &&
+            [[(NSDictionary *)o objectForKey:@"StatusItems"] isKindOfClass:[NSArray class]])
+		{
+			NSMutableDictionary *md = [NSMutableDictionary new];
+			[md setDictionary:(NSDictionary *)o];
+			[md setObject:[NSNumber numberWithInt:xucred.cr_pid] forKey:@"ProcessID"];
+			[md setObject:[NSNumber numberWithInt:xucred.cr_uid] forKey:@"UserID"];
+			[md setObject:[NSNumber numberWithInt:xucred.cr_gid] forKey:@"GroupID"];
         
-        [[NSNotificationCenter defaultCenter] 
-            postNotificationName:WLMenuDidUpdateNotification object:nil
-            userInfo:md];
+			[[NSNotificationCenter defaultCenter] 
+				postNotificationName:WLStatusItemsDidUpdateNotification object:nil
+				userInfo:md];
+        }
     }
 }
 
@@ -129,6 +149,8 @@ int main(int argc, const char *argv[]) {
         name:NSApplicationDidFinishLaunchingNotification object:nil];
     [nctr addObserver:del selector:@selector(menuDidUpdate:)
         name:WLMenuDidUpdateNotification object:nil];
+	[nctr addObserver:del selector:@selector(statusItemsDidUpdate:)
+		name:WLStatusItemsDidUpdateNotification object:nil];
 
     pthread_t menuThread;
     pthread_create(&menuThread, NULL, menuListener, NULL);
